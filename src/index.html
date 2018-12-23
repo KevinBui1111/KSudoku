@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title>Kevin's Sudoku</title>
+  <script src="jquery-3.3.1.min.js"></script>
+
+  <script src="script.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="sdk.css" />
+</head>
+<body spellcheck="false">
+
+  <div class="test" style="background-color:yellow; border: 1px solid black;">
+    <p>
+      stufftrtu
+    </p>
+    <p>
+      stufftrtu 33 2
+    </p>
+  </div>
+
+  <div class="sdk-wrap">
+    <div class="sdk-board">
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="1">5</div>
+        <div class="sdk-cell" tabindex="2">
+          <div class="sdk-cand">1</div>
+          <div class="sdk-cand">2</div>
+          <div class="sdk-cand">3</div>
+          <div class="sdk-cand">4</div>
+          <div class="sdk-cand">5</div>
+          <div class="sdk-cand">6</div>
+          <div class="sdk-cand">7</div>
+          <div class="sdk-cand">8</div>
+          <div class="sdk-cand">9</div>
+        </div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">7</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">2</div>
+        <div class="sdk-cell" tabindex="0">1</div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0">2</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">3</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">5</div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">7</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">1</div>
+        <div class="sdk-cell" tabindex="0">2</div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">7</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">9</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">4</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">4</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">3</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0">5</div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+      <div class="sdk-block">
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+        <div class="sdk-cell" tabindex="0"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

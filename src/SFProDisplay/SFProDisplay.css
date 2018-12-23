@@ -1,0 +1,48 @@
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: normal;
+    font-weight: 200;
+    src: url('SFProDisplay-UltraLight.ttf');
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: normal;
+    font-weight: 300;
+    src: url('SFProDisplay-Light.ttf');
+}
+@font-face {
+  font-family: 'SFProDisplay';
+  font-style: normal;
+  font-weight: 400;
+  src: url('SFProDisplay-Regular.ttf');
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: normal;
+    font-weight: 700;
+    src: url('SFProDisplay-Bold.ttf');
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: normal;
+    font-weight: 800;
+    src: url('SFProDisplay-Heavy.ttf')
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: normal;
+    font-weight: 900;
+    src: url('SFProDisplay-Black.ttf');
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: italic;
+    font-weight: 400;
+    src: url('SFProDisplay-RegularItalic.ttf');
+}
+@font-face {
+    font-family: 'SFProDisplay';
+    font-style: italic;
+    font-weight: 700;
+    src: url('SFProDisplay-BoldItalic.ttf');
+}

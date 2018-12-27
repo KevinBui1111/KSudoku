@@ -58,17 +58,45 @@
   /*width: calc(100%/3 - 5px);*/
   flex: 1 0 29%;
   font-size: .4em;
-  color:grey;
-  text-align:center;
+  color: grey;
+  visibility: hidden;
+  text-align: center;
 }
-
+.is-cand {
+  visibility: visible;
+}
 .sdk-cell.selected {
   background-color: lightskyblue;
 }
 .sdk-cell:focus {
   background-color: lightskyblue;
+  /*color: white;*/
+}
+.sdk-val {
+  position: absolute;
+  /*top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);*/
+}
+.sdk-val:not(:empty) ~ .sdk-cand {
+  visibility: hidden;
 }
 
+/*=======================================================*/
+.btn-note {
+  font-size: 1.2em;
+  color: grey;
+  cursor: default;
+}
+.btn-note.active {
+  color: dodgerblue;
+}
+.btn-note > span:first-child {
+  display: inline-block;
+  font-size: 2em;
+  transform: scaleX(-1);
+}
+/*=======================================================*/
 .test {
   display:none;
 }

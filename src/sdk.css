@@ -65,8 +65,8 @@
 .is-cand {
   visibility: visible;
 }
-.sdk-cell.selected {
-  background-color: lightskyblue;
+.sdk-cell:not(.clue) {
+  color: dodgerblue;
 }
 .sdk-cell:focus {
   background-color: lightskyblue;
@@ -83,18 +83,23 @@
 }
 
 /*=======================================================*/
-.btn-note {
+.operation {
+  display: flex;
   font-size: 1.2em;
   color: grey;
   cursor: default;
+  font-weight: bold;
 }
-.btn-note.active {
+.operation > .active {
   color: dodgerblue;
 }
-.btn-note > span:first-child {
+.operation span:first-child {
   display: inline-block;
   font-size: 2em;
   transform: scaleX(-1);
+}
+.operation > div {
+  margin-right: 1em;
 }
 /*=======================================================*/
 .test {

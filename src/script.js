@@ -1,8 +1,8 @@
 "use strict";
 
-var maxid = 0;
-var max_zindex = 0;
-var list_note = [];
+var note_mode = 0;
+var create_mode = 0;
+var btn_note, btn_create;
 var current_note;
 var dic_label = {};
 var board = [];
@@ -15,6 +15,10 @@ $(document).ready(function () {
     board[r][c] = { dom: e, r: r, c: c };
     e.cell = board[r][c];
   });
+
+  btn_note = document.getElementsByClassName('btn-note')[0];
+  btn_create = document.getElementsByClassName('btn-create')[0];
+
   $(".sdk-cell").click(function () {
     //$(".sdk-cell").removeClass("selected");
     //$(this).addClass("selected");
@@ -53,26 +57,74 @@ $(document).ready(function () {
     if (96 <= event.keyCode && event.keyCode <= 105) value = event.keyCode - 96;
 
     if (value == 0 || event.keyCode == 8 || event.keyCode == 46)
-      set_value_cell(this, 0, 1);
+      set_value_cell(this, 0);
     else if (value > 0)
-      set_value_cell(this, value, 1);
+      set_value_cell(this, value);
   });
-  $(".btn-note").click(function () {
+  $(".btn-note, .btn-create").click(function () {
     this.classList.toggle("active");
+    note_mode = btn_note.classList.contains('active');
+    create_mode = btn_create.classList.contains('active');
   });
 });
 
-function set_value_cell(e, value, note) {
-  if (!note) {
+function set_value_cell(e, value) {
+  e.classList.remove('clue');
+  value = parseInt(value) | 0;
+
+  if (!note_mode) {
+    clear_candidate(e);
+
     if (value == 0)
       e.firstElementChild.innerHTML = '';
-    else if (value > 0)
+    else if (value > 0) {
       e.firstElementChild.innerHTML = value;
+
+      if (create_mode) e.classList.add('clue');
+    }
   }
   else if (value > 0) {
+    e.firstElementChild.innerHTML = '';
     e.getElementsByClassName('sdk-cand')[value - 1].classList.toggle("is-cand");
   }
 }
+
+function clear_candidate(e) {
+  var list_cand = e.getElementsByClassName('is-cand');
+  while (list_cand[0]) {
+    list_cand[0].classList.remove('is-cand');
+  }
+}
+
+function import_from_text() {
+  var puzzle = document.getElementById('txt-puzzle').value;
+  import_puzzle(puzzle);
+}
+function import_puzzle(puzzle) {
+  set_mode(false, true);
+
+  for (var i = 0; i < 81; ++i) {
+    var v = puzzle[i];
+    var r = Math.floor(i / 9);
+    var c = i % 9;
+    var cell = board[r][c];
+    cell.r = r;
+    cell.c = c;
+    cell.clue = true;
+    set_value_cell(cell.dom, v);
+  }
+}
+
+function set_mode(note, create) {
+  note_mode = note;
+  create_mode = create;
+  if (note_mode) btn_note.classList.add('active');
+  else btn_note.classList.remove('active');
+
+  if (create_mode) btn_create.classList.add('active');
+  else btn_create.classList.remove('active');
+}
+
 String.prototype.format = function () {
   var s = this;
   for (var i = 0; i < arguments.length; i++) {

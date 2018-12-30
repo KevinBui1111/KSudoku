@@ -47,12 +47,7 @@
   /*margin: .2em;*/
   outline:none;
 }
-/*.sdk-cell:before {
-  content: '';
-  display: inline-block;
-  height: 100%;
-  vertical-align: middle;
-}*/
+
 .sdk-cand {
   /*height: calc(100%/3);*/
   /*width: calc(100%/3 - 5px);*/
@@ -71,6 +66,9 @@
 .sdk-cell:focus {
   background-color: lightskyblue;
   /*color: white;*/
+}
+.sdk-cell.conflict {
+  color: red;
 }
 .sdk-val {
   position: absolute;

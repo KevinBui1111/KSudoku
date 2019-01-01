@@ -99,6 +99,10 @@
 .operation > div {
   margin-right: 1em;
 }
+.operation > .puzzle {
+  margin: auto 0;
+  font-weight: initial;
+}
 /*=======================================================*/
 .test {
   display:none;

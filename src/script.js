@@ -239,12 +239,13 @@ function fill_candidate() {
           show_cell_candidate(cell.dom, v, cell.cand[v]);
         }
       }
+}
 
+function find_hs() {
   find_hidden_single();
   //find_naked_single();
   find_hidden_single_all();
 }
-
 function find_hidden_single() {
   console.log('-----------------------------');
   cand.forEach(c => {
@@ -298,64 +299,62 @@ function find_hidden_single_naive(c) {
   var hs = [];
 
   ARR09.forEach(i => {
-    sub_check_add_hs(cand[c].b[i], 'BLOCK');
-    sub_check_add_hs(cand[c].r[i], 'ROW');
-    sub_check_add_hs(cand[c].c[i], 'COLUMN');
+    group_check_add_hs(hs, cand[c].b[i], c, 'BLOCK');
+    group_check_add_hs(hs, cand[c].r[i], c, 'ROW');
+    group_check_add_hs(hs, cand[c].c[i], c, 'COLUMN');
   });
 
-  function sub_check_add_hs(group, group_txt) {
-    if (group.length == 1) {
-      hs[group[0].i] = hs[group[0].i] || { cell: group[0], group: [] };
-      hs[group[0].i].group.push(group_txt);
-    }
-  }
+  // return only non empty;
+  return hs.filter(n => n);
+}
+function find_hidden_single_all_naive() {
+  var hs = [];
+
+  ARR10.forEach(c =>
+    ARR09.forEach(i => {
+      group_check_add_hs(hs, cand[c].b[i], c, 'BLOCK');
+      group_check_add_hs(hs, cand[c].r[i], c, 'ROW');
+      group_check_add_hs(hs, cand[c].c[i], c, 'COLUMN');
+    })
+  );
+
   // return only non empty;
   return hs.filter(n => n);
 }
 
 function find_hidden_single_at_cell(cell, c) {
   var hs = [];
+
+  group_check_add_hs(hs, cand[c].b[cell.b], 'BLOCK');
+  group_check_add_hs(hs, cand[c].r[cell.r], 'ROW');
+  group_check_add_hs(hs, cand[c].c[cell.c], 'COLUMN');
+
+  // return only non empty;
+  return hs.filter(n => n);
+}
+function find_hidden_single_all_at_cell(cell) {
+  var hs = [];
   var group;
-  // search by block first
-  group = cand[c].b[cell.b];
-  if (group.length == 1)
-    hs[group[0].i] = { cell: group[0], group: ['BLOCK'] };
-  // search by row
-  group = cand[c].r[cell.r];
-  if (group.length == 1) {
-    hs[group[0].i] = hs[group[0].i] || { cell: group[0], group: [] };
-    hs[group[0].i].group.push('ROW');
-  }
-  // search by column
-  group = cand[c].c[cell.c];
-  if (group.length == 1) {
-    hs[group[0].i] = hs[group[0].i] || { cell: group[0], group: [] };
-    hs[group[0].i].group.push('COLUMN');
-  }
+
+  ARR10.forEach(c => {
+    group_check_add_hs(hs, cand[c].b[cell.b], c, 'BLOCK');
+    group_check_add_hs(hs, cand[c].r[cell.r], c, 'ROW');
+    group_check_add_hs(hs, cand[c].c[cell.c], c, 'COLUMN');
+  });
   // return only non empty;
   return hs.filter(n => n);
 }
 
 function find_hidden_single_all() {
-  var sel_cand = 7;
-  //var hs = find_first_hidden_single(sel_cand);
-  //if (!hs) {
-  //  console.log(`Not found any HS for ${sel_cand}`)
-  //  return;
-  //}
-  //console.log(`candidate ${sel_cand} is HS in ${hs.group}, cell ${hs.cell.r}-${hs.cell.c}`);
-
-  //var stack_affect = set_value_cell_update(hs.cell, sel_cand);
-  //console.log(`== remove candidate ${sel_cand} from cells`);
-  //stack_affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
-  var stack_affect = find_hidden_single_naive(sel_cand).map(h => h.cell);
+  //var sel_cand = 7;
+  var stack_affect = find_hidden_single_all_naive().map(h => h.cell);
   while (stack_affect.length > 0) {
     var cell = stack_affect.pop();
     console.log(`process cell ${cell.r}-${cell.c}`);
-    find_hidden_single_at_cell(cell, sel_cand).forEach(h => {
-      console.log(`candidate ${sel_cand} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
-      var affect = set_value_cell_update(h.cell, sel_cand);
-      console.log(`== remove candidate ${sel_cand} from cells`);
+    find_hidden_single_all_at_cell(cell).forEach(h => {
+      console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+      var affect = set_value_cell_update(h.cell, h.v);
+      console.log(`== remove candidate ${h.v} from cells`);
       affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
       // push to stack
       stack_affect.push.apply(stack_affect, affect);
@@ -369,8 +368,8 @@ function set_value_cell_update(cell, v) {
   // update 
   cell.v = v;
   cell.cand = [];
+  cell.cand_ls.forEach(c => remove_candidate_from_cell(cell, c.v));
   cell.cand_ls = [];
-  remove_candidate_from_cell(cell, v);
   // remove candidate from block, row, col
   var affect_ls = [];
   ARR09.forEach(i => {
@@ -399,6 +398,12 @@ function remove_candidate_from_cell(c, v) {
   //remove from view
   show_cell_candidate(c.dom, v, 0);
 }
+function group_check_add_hs(hs, group, v, group_txt) {
+  if (group.length == 1) {
+    hs[group[0].i] = hs[group[0].i] || { cell: group[0], v: v, group: [] };
+    hs[group[0].i].group.push(group_txt);
+  }
+}
 
 function show_cell_candidate(e, v, show) {
   if (show == 1)
@@ -406,7 +411,7 @@ function show_cell_candidate(e, v, show) {
   else if (show == 0)
     e.getElementsByClassName('sdk-cand')[v - 1].classList.remove('is-cand');
   else
-    e.getElementsByClassName('sdk-cand')[value - 1].classList.toggle("is-cand");
+    e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
 }
 function reset_candidate() {
   cand = ARR10.map(i => ({

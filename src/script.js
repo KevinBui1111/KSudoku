@@ -425,26 +425,35 @@ function get_group_name(id) {
   var type = ['ROW', 'COLUMN', 'BLOCK'];
   return `${type[id / 9 | 0]} ${id % 9}`;
 }
+function find_hidden_single_all_at_group(group_id) {
+  var hs = [];
+    
+  ARR10.forEach(c => {
+    group_check_add_hs(hs, cand[c].g[group_id], c, get_group_name(group_id));
+  });
+  // return only non empty;
+  return hs.filter(n => n);
+}
 function find_hidden_single_all() {
   var mark_affect = [];
   var stack_affect = find_hidden_single_all_naive().map(h => h.cell)
-  stack_affect.forEach(c => mark_affect[c.i] = true);
+  stack_affect.forEach(c => mark_affect[c] = true);
   while (stack_affect.length > 0) {
     var group_id = stack_affect.pop();
-    mark_affect[group_id.i] = false;
-    console.log(`process group ${group_id.r}-${group_id.c}`);
-    find_hidden_single_all_at_cell(group_id).forEach(h => {
+    mark_affect[group_id] = false;
+    console.log(`process group ${get_group_name(group_id)}`);
+    find_hidden_single_all_at_group(group_id).forEach(h => {
       console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
       var affect = set_value_cell_update_v2(h.cell, h.v);
       // remove from stack
-      if (!mark_affect[h.cell.i]) {
-        stack_affect.push(h.cell);
-        mark_affect[h.cell.i] = true;
+      if (!mark_affect[group_id]) {
+        stack_affect.push(group_id);
+        mark_affect[group_id] = true;
       }
-      console.log(`== remove candidate ${h.v} from cells`);
-      affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
-      affect = affect.filter(c => !mark_affect[c.i]);
-      affect.forEach(c => mark_affect[c.i] = true);
+      console.log(`== afffect to group:`);
+      affect.forEach(c => console.log(`==== ${get_group_name(c)}`));
+      affect = affect.filter(c => !mark_affect[c]);
+      affect.forEach(c => mark_affect[c] = true);
       // push to stack
       stack_affect.push.apply(stack_affect, affect);
     });
@@ -485,12 +494,20 @@ function show_cell_candidate(e, v, show) {
     e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
 }
 function reset_candidate() {
-  cand = ARR10.map(i => ({
-    v: i,
-    r: ARR09.map(_ => []),
-    c: ARR09.map(_ => []),
-    b: ARR09.map(_ => []),
-  }));
+  cand = ARR10.map(i => {
+    var c = {
+      v: i,
+      r: ARR09.map(_ => []),
+      c: ARR09.map(_ => []),
+      b: ARR09.map(_ => []),
+      g: []
+    };
+    c.g.push.apply(c.g, c.r);
+    c.g.push.apply(c.g, c.c);
+    c.g.push.apply(c.g, c.b);
+
+    return c;
+  });
 }
 //=============================================================
 String.prototype.format = function () {

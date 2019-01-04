@@ -5,7 +5,13 @@ var create_mode = 0;
 var btn_note, btn_create;
 var ARR09 = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 var ARR10 = [, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-var block = []
+var group = {};
+/*
+  i: index
+  type: row/col/block
+  id: 0-26 (9 + 9 + 9)
+*/
+var block = []; // block[n][i] refer the cell ith in block nth
 var cand = [];
 /*
 cand[1..9] {
@@ -347,20 +353,29 @@ function find_hidden_single_all_at_cell(cell) {
 
 function find_hidden_single_all() {
   //var sel_cand = 7;
-  var stack_affect = find_hidden_single_all_naive().map(h => h.cell);
+  var mark_affect = [];
+  var stack_affect = find_hidden_single_all_naive().map(h => h.cell)
+  stack_affect.forEach(c => mark_affect[c.i] = true);
   while (stack_affect.length > 0) {
     var cell = stack_affect.pop();
+    mark_affect[cell.i] = false;
     console.log(`process cell ${cell.r}-${cell.c}`);
     find_hidden_single_all_at_cell(cell).forEach(h => {
       console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
       var affect = set_value_cell_update(h.cell, h.v);
+      // remove from stack
+      if (!mark_affect[h.cell.i]) {
+        stack_affect.push(h.cell);
+        mark_affect[h.cell.i] = true;
+      }
       console.log(`== remove candidate ${h.v} from cells`);
       affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
+      affect = affect.filter(c => !mark_affect[c.i]);
+      affect.forEach(c => mark_affect[c.i] = true);
       // push to stack
       stack_affect.push.apply(stack_affect, affect);
     });
   }
-
 }
 function set_value_cell_update(cell, v) {
   // set in view
@@ -368,7 +383,7 @@ function set_value_cell_update(cell, v) {
   // update 
   cell.v = v;
   cell.cand = [];
-  cell.cand_ls.forEach(c => remove_candidate_from_cell(cell, c.v));
+  cell.cand_ls.map(c => c.v).forEach(c => remove_candidate_from_cell(cell, c));
   cell.cand_ls = [];
   // remove candidate from block, row, col
   var affect_ls = [];
@@ -403,6 +418,62 @@ function group_check_add_hs(hs, group, v, group_txt) {
     hs[group[0].i] = hs[group[0].i] || { cell: group[0], v: v, group: [] };
     hs[group[0].i].group.push(group_txt);
   }
+}
+
+//==========================================
+function get_group_name(id) {
+  var type = ['ROW', 'COLUMN', 'BLOCK'];
+  return `${type[id / 9 | 0]} ${id % 9}`;
+}
+function find_hidden_single_all() {
+  var mark_affect = [];
+  var stack_affect = find_hidden_single_all_naive().map(h => h.cell)
+  stack_affect.forEach(c => mark_affect[c.i] = true);
+  while (stack_affect.length > 0) {
+    var group_id = stack_affect.pop();
+    mark_affect[group_id.i] = false;
+    console.log(`process group ${group_id.r}-${group_id.c}`);
+    find_hidden_single_all_at_cell(group_id).forEach(h => {
+      console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+      var affect = set_value_cell_update_v2(h.cell, h.v);
+      // remove from stack
+      if (!mark_affect[h.cell.i]) {
+        stack_affect.push(h.cell);
+        mark_affect[h.cell.i] = true;
+      }
+      console.log(`== remove candidate ${h.v} from cells`);
+      affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
+      affect = affect.filter(c => !mark_affect[c.i]);
+      affect.forEach(c => mark_affect[c.i] = true);
+      // push to stack
+      stack_affect.push.apply(stack_affect, affect);
+    });
+  }
+}
+function set_value_cell_update_v2(cell, v) {
+  // set in view
+  set_value_cell(cell.dom, v);
+  // update 
+  cell.v = v;
+  cell.cand = [];
+  cell.cand_ls.map(c => c.v).forEach(c => remove_candidate_from_cell(cell, c));
+  cell.cand_ls = [];
+  // remove candidate from block, row, col
+  var affect_ls = [];
+  ARR09.forEach(i => {
+    sub_check_remove_cand(board[cell.r][i], 9 + c.c, 18 + c.b); // column
+    sub_check_remove_cand(board[i][cell.c], 0 + c.r, 18 + c.b); // row
+    sub_check_remove_cand(block[cell.b][i], 0 + c.r,  9 + c.c); // block
+  });
+
+  function sub_check_remove_cand(c, type, g1_id, g2_id) {
+    if (c.v || !c.cand[v]) return;
+
+    affect_ls[g1_id] = affect_ls[g2_id] = true;
+    remove_candidate_from_cell(c, v);
+  }
+
+  return affect_ls.filter(id => id);
 }
 
 function show_cell_candidate(e, v, show) {

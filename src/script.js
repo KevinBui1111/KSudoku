@@ -276,7 +276,7 @@ function fill_candidate() {
 function find_hs() {
   // find_hidden_single();
   //find_naked_single();
-  find_hidden_single_all_v3();
+  find_hidden_single_all_v2();
 }
 function find_hidden_single() {
   console.log('-----------------------------');
@@ -413,17 +413,15 @@ function set_value_cell_update(cell, v) {
   cell.cand_ls = [];
   // remove candidate from block, row, col
   var affect_ls = [];
-  ARR09.forEach(i => {
-    sub_check_remove_cand(board[cell.r][i]);
-    sub_check_remove_cand(board[i][cell.c]);
-    sub_check_remove_cand(block[cell.b][i]);
-  });
+  sub_check_remove_cand(cand[v].r[cell.r]);
+  sub_check_remove_cand(cand[v].c[cell.c]);
+  sub_check_remove_cand(cand[v].b[cell.b]);
 
-  function sub_check_remove_cand(c) {
-    if (!c.v && c.cand[v]) {
+  function sub_check_remove_cand(g) {
+    g.map(c => c).forEach(c => {
       affect_ls.push(c);
       remove_candidate_from_cell(c, v);
-    }
+    });  
   }
 
   return affect_ls;
@@ -500,23 +498,46 @@ function set_value_cell_update_v2(cell, v) {
   cell.cand_ls.map(c => c.v).forEach(c => remove_candidate_from_cell(cell, c));
   cell.cand_ls = [];
   // remove candidate from block, row, col
-  var affect_ls = [];
-  ARR09.forEach(i => {
-    sub_check_remove_cand(board[cell.r][i], 9 + i, 18 + board[cell.r][i].b); // column
-    sub_check_remove_cand(board[i][cell.c], 0 + i, 18 + board[i][cell.c].b); // row
-    sub_check_remove_cand(block[cell.b][i], 0 + block[cell.b][i].r, 9 + block[cell.b][i].c); // block
-  });
+  var affect_ls = [], affect = [];
+  // ARR09.forEach(i => {
+    sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
+    sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
+    sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
+  // });
   // add row, column, block of this cell
-  affect_ls[cell.r] = affect_ls[9 + cell.c] = affect_ls[18 + cell.b] = true;
-
-  function sub_check_remove_cand(c, g1_id, g2_id) {
-    if (c.v || !c.cand[v]) return;
-
-    affect_ls[g1_id] = affect_ls[g2_id] = true;
-    remove_candidate_from_cell(c, v);
+  if (!affect_ls[cell.r]) {
+    affect_ls[cell.r] = true;
+    affect.push(cell.r);
+  }
+  if (!affect_ls[18 + cell.b]) {
+    affect_ls[18 + cell.b] = true;
+    affect.push(18 + cell.b);
+  }
+  if (!affect_ls[9 + cell.c]) {
+    affect_ls[9 + cell.c] = true;
+    affect.push(9 + cell.c);
   }
 
-  return affect_ls.map((_, i) => i).filter(id => id >= 0);
+  function sub_check_remove_cand(g, t) {
+    g.map(c => c).forEach(c => {
+      // if (c.v || !c.cand[v]) return;
+
+      if (!affect_ls[c.r] && t != 'ROW') {
+        affect_ls[c.r] = true;
+        affect.push(c.r);
+      }
+      if (!affect_ls[9 + c.c] && t != 'COLUMN') {
+        affect_ls[9 + c.c] = true;
+        affect.push(9 + c.c);
+      }
+      if (!affect_ls[18 + c.b] && t != 'BLOCK') {
+        affect_ls[18 + c.b] = true;
+        affect.push(18 + c.b);
+      }
+      remove_candidate_from_cell(c, v);
+    });
+  }
+  return affect;
 }
 //==========================================
 function find_hidden_single_all_v3() {

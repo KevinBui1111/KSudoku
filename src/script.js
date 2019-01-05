@@ -108,6 +108,7 @@ $(document).ready(function () {
 });
 
 function set_value_cell(e, value) {
+  return;
   if (!create_mode && e.classList.contains('clue'))
     return;
 
@@ -131,13 +132,38 @@ function set_value_cell(e, value) {
     show_cell_candidate(e, value, 2);
   }
 }
+function show_cell_candidate(e, v, show) {
+  return;
+  if (show == 1)
+    e.getElementsByClassName('sdk-cand')[v - 1].classList.add('is-cand');
+  else if (show == 0)
+    e.getElementsByClassName('sdk-cand')[v - 1].classList.remove('is-cand');
+  else
+    e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
+}
+function reset_candidate() {
+  cand = ARR10.map(i => {
+    var c = {
+      v: i,
+      r: ARR09.map(_ => []),
+      c: ARR09.map(_ => []),
+      b: ARR09.map(_ => []),
+      g: []
+    };
+    c.g.push.apply(c.g, c.r);
+    c.g.push.apply(c.g, c.c);
+    c.g.push.apply(c.g, c.b);
 
+    return c;
+  });
+}
 function clear_candidate(e) {
   var list_cand = e.getElementsByClassName('is-cand');
   while (list_cand[0]) {
     list_cand[0].classList.remove('is-cand');
   }
 }
+//=============================================================
 function import_from_text() {
   var puzzle = document.getElementById('txt-puzzle').value;
   import_puzzle(puzzle);
@@ -191,7 +217,7 @@ function check_stat() {
     cs = ARR09.map(() => []),
     bs = ARR09.map(() => []),
     conflict = false;
-    ;
+  ;
 
   for (var r = 0; r < 9; ++r)
     for (var c = 0; c < 9; ++c) {
@@ -248,9 +274,9 @@ function fill_candidate() {
 }
 
 function find_hs() {
-  find_hidden_single();
+  // find_hidden_single();
   //find_naked_single();
-  find_hidden_single_all();
+  find_hidden_single_all_v3();
 }
 function find_hidden_single() {
   console.log('-----------------------------');
@@ -359,17 +385,17 @@ function find_hidden_single_all() {
   while (stack_affect.length > 0) {
     var cell = stack_affect.pop();
     mark_affect[cell.i] = false;
-    console.log(`process cell ${cell.r}-${cell.c}`);
+    // console.log(`process cell ${cell.r}-${cell.c}`);
     find_hidden_single_all_at_cell(cell).forEach(h => {
-      console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+      // console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
       var affect = set_value_cell_update(h.cell, h.v);
       // remove from stack
       if (!mark_affect[h.cell.i]) {
         stack_affect.push(h.cell);
         mark_affect[h.cell.i] = true;
       }
-      console.log(`== remove candidate ${h.v} from cells`);
-      affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
+      // console.log(`== remove candidate ${h.v} from cells`);
+      // affect.forEach(c => console.log(`==== ${c.r}-${c.c}`));
       affect = affect.filter(c => !mark_affect[c.i]);
       affect.forEach(c => mark_affect[c.i] = true);
       // push to stack
@@ -419,7 +445,6 @@ function group_check_add_hs(hs, group, v, group_txt) {
     hs[group[0].i].group.push(group_txt);
   }
 }
-
 //==========================================
 function get_group_name(id) {
   var type = ['ROW', 'COLUMN', 'BLOCK'];
@@ -427,36 +452,43 @@ function get_group_name(id) {
 }
 function find_hidden_single_all_at_group(group_id) {
   var hs = [];
-    
+
   ARR10.forEach(c => {
     group_check_add_hs(hs, cand[c].g[group_id], c, get_group_name(group_id));
   });
   // return only non empty;
   return hs.filter(n => n);
 }
-function find_hidden_single_all() {
-  var mark_affect = [];
-  var stack_affect = find_hidden_single_all_naive().map(h => h.cell)
-  stack_affect.forEach(c => mark_affect[c] = true);
+function find_hidden_single_all_v2() {
+  var mark_affect = []
+    , stack_affect = [];
+
+  find_hidden_single_all_naive().forEach(h => {
+    sub_process_hs(h);
+  });
+
   while (stack_affect.length > 0) {
     var group_id = stack_affect.pop();
     mark_affect[group_id] = false;
-    console.log(`process group ${get_group_name(group_id)}`);
+    // console.log(`process group ${get_group_name(group_id)}`);
     find_hidden_single_all_at_group(group_id).forEach(h => {
-      console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
-      var affect = set_value_cell_update_v2(h.cell, h.v);
-      // remove from stack
-      if (!mark_affect[group_id]) {
-        stack_affect.push(group_id);
-        mark_affect[group_id] = true;
-      }
-      console.log(`== afffect to group:`);
-      affect.forEach(c => console.log(`==== ${get_group_name(c)}`));
-      affect = affect.filter(c => !mark_affect[c]);
-      affect.forEach(c => mark_affect[c] = true);
-      // push to stack
-      stack_affect.push.apply(stack_affect, affect);
+      sub_process_hs(h);
     });
+  }
+
+  function sub_process_hs(h) {
+    // console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+    var affect = set_value_cell_update_v2(h.cell, h.v);
+
+    // console.log('== affect to group:');
+    // affect.forEach(c => console.log(`==== ${get_group_name(c)}`));
+
+    // just add new affect to stack
+    affect = affect.filter(c => !mark_affect[c]);
+    affect.forEach(c => mark_affect[c] = true);
+
+    // push to stack
+    stack_affect.push.apply(stack_affect, affect);
   }
 }
 function set_value_cell_update_v2(cell, v) {
@@ -470,46 +502,57 @@ function set_value_cell_update_v2(cell, v) {
   // remove candidate from block, row, col
   var affect_ls = [];
   ARR09.forEach(i => {
-    sub_check_remove_cand(board[cell.r][i], 9 + c.c, 18 + c.b); // column
-    sub_check_remove_cand(board[i][cell.c], 0 + c.r, 18 + c.b); // row
-    sub_check_remove_cand(block[cell.b][i], 0 + c.r,  9 + c.c); // block
+    sub_check_remove_cand(board[cell.r][i], 9 + i, 18 + board[cell.r][i].b); // column
+    sub_check_remove_cand(board[i][cell.c], 0 + i, 18 + board[i][cell.c].b); // row
+    sub_check_remove_cand(block[cell.b][i], 0 + block[cell.b][i].r, 9 + block[cell.b][i].c); // block
   });
+  // add row, column, block of this cell
+  affect_ls[cell.r] = affect_ls[9 + cell.c] = affect_ls[18 + cell.b] = true;
 
-  function sub_check_remove_cand(c, type, g1_id, g2_id) {
+  function sub_check_remove_cand(c, g1_id, g2_id) {
     if (c.v || !c.cand[v]) return;
 
     affect_ls[g1_id] = affect_ls[g2_id] = true;
     remove_candidate_from_cell(c, v);
   }
 
-  return affect_ls.filter(id => id);
+  return affect_ls.map((_, i) => i).filter(id => id >= 0);
+}
+//==========================================
+function find_hidden_single_all_v3() {
+  var found = true;
+  while (found) {
+    found = false;
+    // console.log('--------');
+    find_hidden_single_all_naive().forEach(h => {
+      // console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+      found = true;
+      set_value_cell_update_v3(h.cell, h.v);
+    });
+  }
+}
+function set_value_cell_update_v3(cell, v) {
+  // set in view
+  set_value_cell(cell.dom, v);
+  // update 
+  cell.v = v;
+  cell.cand = [];
+  cell.cand_ls.map(c => c.v).forEach(c => remove_candidate_from_cell(cell, c));
+  cell.cand_ls = [];
+  // remove candidate from block, row, col
+  sub_check_remove_cand(cand[v].r[cell.r]);
+  sub_check_remove_cand(cand[v].c[cell.c]);
+  sub_check_remove_cand(cand[v].b[cell.b]);
+
+  function sub_check_remove_cand(g) {
+    g.map(c => c).forEach(c => {
+      if (c.cand[v]) remove_candidate_from_cell(c, v);
+    });
+  }
 }
 
-function show_cell_candidate(e, v, show) {
-  if (show == 1)
-    e.getElementsByClassName('sdk-cand')[v - 1].classList.add('is-cand');
-  else if (show == 0)
-    e.getElementsByClassName('sdk-cand')[v - 1].classList.remove('is-cand');
-  else
-    e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
-}
-function reset_candidate() {
-  cand = ARR10.map(i => {
-    var c = {
-      v: i,
-      r: ARR09.map(_ => []),
-      c: ARR09.map(_ => []),
-      b: ARR09.map(_ => []),
-      g: []
-    };
-    c.g.push.apply(c.g, c.r);
-    c.g.push.apply(c.g, c.c);
-    c.g.push.apply(c.g, c.b);
+//==========================================
 
-    return c;
-  });
-}
-//=============================================================
 String.prototype.format = function () {
   var s = this;
   for (var i = 0; i < arguments.length; i++) {

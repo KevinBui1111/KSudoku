@@ -6,6 +6,7 @@
   <script src="jquery-3.3.1.min.js"></script>
 
   <script src="script.js"></script>
+  <script src="sudoku-data-full.js"></script>
 
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="sdk.css" />
@@ -1023,6 +1024,10 @@
       <input type="button" value="Fill candidate" onclick="fill_candidate();" />
       <input type="button" value="Hidden Single" onclick="find_hs();" />
     </div>
+  </div>
+  <div>
+    <input type="checkbox" id="chk-show-ui" onchange="show_on_ui(this);"/>
+    <label for="chk-show-ui">Show on UI</label>
   </div>
 </body>
 </html>

@@ -1,11 +1,11 @@
 "use strict";
 
+var show_ui_mode = false;
 var note_mode = 0;
 var create_mode = 0;
 var btn_note, btn_create;
 var ARR09 = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 var ARR10 = [, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-var group = {};
 /*
   i: index
   type: row/col/block
@@ -106,9 +106,11 @@ $(document).ready(function () {
     }
   });
 });
-
+function show_on_ui(e) {
+  show_ui_mode = e.checked;
+}
 function set_value_cell(e, value) {
-  return;
+  if (!show_ui_mode) return;
   if (!create_mode && e.classList.contains('clue'))
     return;
 
@@ -133,7 +135,7 @@ function set_value_cell(e, value) {
   }
 }
 function show_cell_candidate(e, v, show) {
-  return;
+  if (!show_ui_mode) return;
   if (show == 1)
     e.getElementsByClassName('sdk-cand')[v - 1].classList.add('is-cand');
   else if (show == 0)
@@ -211,7 +213,12 @@ function export_puzzle() {
 
   return res;
 }
-
+function check_complete() {
+  for (var r = 0; r < 9; ++r)
+    for (var c = 0; c < 9; ++c)
+      if (!board[r][c].v) return false;
+  return true;
+}
 function check_stat() {
   var rs = ARR09.map(() => []), // ommit 0, count 1..9
     cs = ARR09.map(() => []),
@@ -221,8 +228,8 @@ function check_stat() {
 
   for (var r = 0; r < 9; ++r)
     for (var c = 0; c < 9; ++c) {
-      if (board[r][c].clue) {
-        var v = board[r][c].v;
+      var v;
+      if (v = board[r][c].v) {
         var b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
         if (rs[r][v] || cs[c][v] || bs[b][v]) {
           // conflict
@@ -276,7 +283,8 @@ function fill_candidate() {
 function find_hs() {
   // find_hidden_single();
   //find_naked_single();
-  find_hidden_single_all_v2();
+  find_hidden_single_all_v4();
+  check_stat();
 }
 function find_hidden_single() {
   console.log('-----------------------------');
@@ -421,7 +429,7 @@ function set_value_cell_update(cell, v) {
     g.map(c => c).forEach(c => {
       affect_ls.push(c);
       remove_candidate_from_cell(c, v);
-    });  
+    });
   }
 
   return affect_ls;
@@ -500,9 +508,9 @@ function set_value_cell_update_v2(cell, v) {
   // remove candidate from block, row, col
   var affect_ls = [], affect = [];
   // ARR09.forEach(i => {
-    sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
-    sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
-    sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
+  sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
+  sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
+  sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
   // });
   // add row, column, block of this cell
   if (!affect_ls[cell.r]) {
@@ -539,7 +547,7 @@ function set_value_cell_update_v2(cell, v) {
   }
   return affect;
 }
-//==========================================
+//============Fastest and most naive=======================
 function find_hidden_single_all_v3() {
   var found = true;
   while (found) {
@@ -571,9 +579,159 @@ function set_value_cell_update_v3(cell, v) {
     });
   }
 }
+//============Slowest and most customize================
+function find_hidden_single_at_group(group_id) {
+  var hs = [];
+  var v = group_id / 27 | 0;
+  var group_c_id = group_id % 27;
+  var group = cand[v].g[group_c_id];
 
+  if (group.length == 1)
+    return { cell: group[0], v: v, group: [get_group_name(group_c_id)] };
+}
+function find_hidden_single_all_v4() {
+  var mark_affect = []
+    , stack_affect = [];
+
+  find_hidden_single_all_naive().forEach(h => {
+    sub_process_hs(h);
+  });
+  //cand[v].b[n] = v * (18 + n) = v * g
+  while (stack_affect.length > 0) {
+    var group_id = stack_affect.pop();
+    mark_affect[group_id] = false;
+    // console.log(`process group ${get_group_name(group_id)}`);
+    var h = find_hidden_single_at_group(group_id);
+    if (h) sub_process_hs(h);
+  }
+
+  function sub_process_hs(h) {
+    // console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
+    var affect = set_value_cell_update_v4(h.cell, h.v);
+
+    // console.log('== affect to group:');
+    // affect.forEach(c => console.log(`==== ${get_group_name(c)}`));
+
+    // just add new affect to stack
+    affect = affect.filter(c => !mark_affect[c]);
+    affect.forEach(c => mark_affect[c] = true);
+
+    // push to stack
+    stack_affect.push.apply(stack_affect, affect);
+  }
+}
+function set_value_cell_update_v4(cell, v) {
+  var affect_ls = [], affect = [];
+  // set in view
+  set_value_cell(cell.dom, v);
+  // update 
+  cell.v = v;
+  cell.cand = [];
+  cell.cand_ls.map(c => c.v).forEach(c => {
+    sub_add_group_affect(c);
+    remove_candidate_from_cell(cell, c);
+  });
+  cell.cand_ls = [];
+  // remove candidate from block, row, col
+  // ARR09.forEach(i => {
+  sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
+  sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
+  sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
+  // });
+  // add row, column, block of this cell
+  sub_add_group_affect(v);
+
+  function sub_add_group_affect(c) {
+    if (!affect_ls[c * 27 + cell.r]) {
+      affect_ls[c * 27 + cell.r] = true;
+      affect.push(c * 27 + cell.r);
+    }
+    if (!affect_ls[c * 27 + 18 + cell.b]) {
+      affect_ls[c * 27 + 18 + cell.b] = true;
+      affect.push(c * 27 + 18 + cell.b);
+    }
+    if (!affect_ls[c * 27 + 9 + cell.c]) {
+      affect_ls[c * 27 + 9 + cell.c] = true;
+      affect.push(c * 27 + 9 + cell.c);
+    }
+  }
+
+  function sub_check_remove_cand(g, t) {
+    g.map(c => c).forEach(c => {
+      // if (c.v || !c.cand[v]) return;
+
+      if (!affect_ls[v * 27 + c.r] && t != 'ROW') {
+        affect_ls[v * 27 + c.r] = true;
+        affect.push(v * 27 + c.r);
+      }
+      if (!affect_ls[v * 27 + 9 + c.c] && t != 'COLUMN') {
+        affect_ls[v * 27 + 9 + c.c] = true;
+        affect.push(v * 27 + 9 + c.c);
+      }
+      if (!affect_ls[v * 27 + 18 + c.b] && t != 'BLOCK') {
+        affect_ls[v * 27 + 18 + c.b] = true;
+        affect.push(v * 27 + 18 + c.b);
+      }
+      remove_candidate_from_cell(c, v);
+    });
+  }
+  return affect;
+}
 //==========================================
-
+function rotate_matrix(m){
+  var m = [
+    [11, 12, 13],
+    [21, 22, 23],
+    [31, 32, 33],
+    [41, 42, 43],
+    [51, 52, 53],
+  ];
+  var rn = m.length
+     ,cn = m[0].length
+     ,ARRC = Array.from(Array(cn))
+     ,ARRR = Array.from(Array(rn));
+  
+  function print_m(m) {
+    console.log('----------------');
+      m.forEach(r => console.log(r));
+  }
+  
+  //90 clockwise
+  var m1 = ARRC.map((_,c) =>
+    ARRR.map((_,r) => m[rn - 1 - r][c])
+  );
+  print_m(m1);
+  
+  //90 counter clockwise
+  m1 = ARRC.map((_,c) =>
+    ARRR.map((_,r) => m[r][cn - 1 - c])
+  );
+  print_m(m1);
+  
+  //180
+  m1 = ARRR.map((_,r) =>
+    ARRC.map((_,c) => m[rn - 1 - r][cn - 1 - c])
+  );
+  print_m(m1);
+  
+  // flip vertical
+  m1 = ARRR.map((_,r) =>
+    ARRC.map((_,c) => m[rn - 1 - r][c])
+  );
+  print_m(m1);
+  
+  // flip horizontal
+  m1 = ARRR.map((_,r) =>
+    ARRC.map((_,c) => m[r][cn - 1 - c])
+  );
+  print_m(m1);
+  
+  // flip horizontal & 90 counter clockwise
+  m1 = ARRC.map((_,c) =>
+    ARRR.map((_,r) => m[r][c])
+  );
+}
+//==========================================
 String.prototype.format = function () {
   var s = this;
   for (var i = 0; i < arguments.length; i++) {

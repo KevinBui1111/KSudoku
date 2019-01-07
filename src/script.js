@@ -678,7 +678,7 @@ function set_value_cell_update_v4(cell, v) {
   return affect;
 }
 //==========================================
-function rotate_matrix(m){
+function rotate_matrix(m) {
   var m = [
     [11, 12, 13],
     [21, 22, 23],
@@ -687,49 +687,44 @@ function rotate_matrix(m){
     [51, 52, 53],
   ];
   var rn = m.length
-     ,cn = m[0].length
-     ,ARRC = Array.from(Array(cn))
-     ,ARRR = Array.from(Array(rn));
-  
-  function print_m(m) {
-    console.log('----------------');
-      m.forEach(r => console.log(r));
+    , cn = m[0].length
+    , ARRC = Array.from(Array(cn))
+    , ARRR = Array.from(Array(rn));
+
+  function print_m(m, desc) {
+    console.log(`-------${desc}--------`);
+    m.forEach(r => console.log(r));
   }
-  
+
   //90 clockwise
-  var m1 = ARRC.map((_,c) =>
-    ARRR.map((_,r) => m[rn - 1 - r][c])
-  );
-  print_m(m1);
-  
+  var m1 = ARRC.map((_, c) => ARRR.map((_, r) => m[rn - 1 - r][c]));
+  print_m(m1, '90 clockwise');
+
   //90 counter clockwise
-  m1 = ARRC.map((_,c) =>
-    ARRR.map((_,r) => m[r][cn - 1 - c])
-  );
-  print_m(m1);
-  
+  m1 = ARRC.map((_, c) => ARRR.map((_, r) => m[r][cn - 1 - c]));
+  print_m(m1, '90 counter clockwise');
+
   //180
-  m1 = ARRR.map((_,r) =>
-    ARRC.map((_,c) => m[rn - 1 - r][cn - 1 - c])
-  );
-  print_m(m1);
-  
+  m1 = ARRR.map((_, r) => ARRC.map((_, c) => m[rn - 1 - r][cn - 1 - c]));
+  print_m(m1, '180');
+
   // flip vertical
-  m1 = ARRR.map((_,r) =>
-    ARRC.map((_,c) => m[rn - 1 - r][c])
-  );
-  print_m(m1);
-  
+  m1 = ARRR.map((_, r) => ARRC.map((_, c) => m[rn - 1 - r][c]));
+  print_m(m1, 'flip vertical');
+
   // flip horizontal
-  m1 = ARRR.map((_,r) =>
-    ARRC.map((_,c) => m[r][cn - 1 - c])
-  );
-  print_m(m1);
-  
+  m1 = ARRR.map((_, r) => ARRC.map((_, c) => m[r][cn - 1 - c]));
+  print_m(m1, 'flip horizontal');
+
   // flip horizontal & 90 counter clockwise
-  m1 = ARRC.map((_,c) =>
-    ARRR.map((_,r) => m[r][c])
-  );
+  m1 = ARRC.map((_, c) => ARRR.map((_, r) => m[r][c]));
+  print_m(m1, 'flip horizontal & 90 counter clockwise (transpose)');
+
+  // flip horizontal & 90 counter clockwise
+  m1 = ARRC.map((_, c) => ARRR.map((_, r) => m[rn - 1 - r][cn - 1 - c]));
+  print_m(m1, 'flip horizontal & 90 clockwise');
+
+
 }
 //==========================================
 String.prototype.format = function () {

@@ -1,17 +1,25 @@
 function categorize_seed(arr_puzz) {
   var group_seed = [];
   arr_puzz.forEach(p => {
-    group_seed.some(g => check_puzz_group_seed(g, p))
+    var gs = group_seed.find(
+      g => g.length && check_puzzle_seed(g[0], p)
+    );
+    gs && gs.push(p) || group_seed.push([p]);
   });
+
+  return group_seed;
 }
 function check_puzzle_seed(p1, p2) {
-  let ori_p2 = [0, 1, 2, 3, 4, 5, 6, 7].map(o => rotate_puzzle(p2, o));
-  return ori_p2.some(o => check_puzzle_same_map_only());
+  return [0, 1, 2, 3, 4, 5, 6, 7]
+    .map(o => rotate_puzzle(p2, o))
+    .some(o => check_puzzle_same_map_only(p1, o));
 }
+var chk_count = 0;
 function check_puzzle_same_map_only(p1, p2) {
+  ++chk_count;
   if (typeof p1 != 'string' || p1.length != 81 ||
     typeof p2 != 'string' || p2.length != 81
-  ) return -1;
+  ) return false;
 
   let map1 = new Map()
     , set2 = new Set();
@@ -20,18 +28,18 @@ function check_puzzle_same_map_only(p1, p2) {
       , v2 = parseInt(p2[i]) | 0;
     // if one of two is 0, break.
     if (!v1 && !v2) continue;
-    if (!v1 || !v2) break;
+    if (!v1 || !v2) return false;
 
     if (map1.has(v1)) {
-      if (map1.get(v1) != v2) break;
+      if (map1.get(v1) != v2) return false;
     }
-    else if (set2.has(v2)) break;
+    else if (set2.has(v2)) return false;
     else {
       map1.set(v1, v2);
       set2.add(v2);
     }
   }
-  return i;
+  return true;
 }
 function rotate_puzzle(p, orient) {
   let board = ARR09.map(r => ARR09.map(c => p[r * 9 + c]))

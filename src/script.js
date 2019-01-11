@@ -22,7 +22,8 @@ cand[1..9] {
   cell: array of board[][]
 }
 */
-var board = [];
+var board = []
+  , seqcell = [];
 /* board[r][c] {
   dom: Dom element '.sdk-cell'
   r,c,b,v
@@ -35,9 +36,9 @@ var board = [];
 
 $(document).ready(function () {
   document.querySelectorAll('.sdk-cell').forEach((e, i) => {
-    var r = Math.floor(i / 27) * 3 + Math.floor((i % 9) / 3)
-      , c = Math.floor(i / 9 % 3) * 3 + i % 3
-      , b = Math.floor(i / 9);
+    var r = ~~(i / 27) * 3 + ~~((i % 9) / 3)
+      , b = ~~(i / 9)
+      , c = ~~(b % 3) * 3 + i % 3;
     board[r] = board[r] || [];
     board[r][c] = {
       dom: e,
@@ -46,7 +47,7 @@ $(document).ready(function () {
       cand_ls: []
     };
     (block[b] = block[b] || [])[i % 9] = board[r][c];
-    e.cell = board[r][c];
+    seqcell[i] = e.cell = board[r][c];
   });
 
   reset_candidate();
@@ -175,7 +176,7 @@ function import_puzzle(puzzle) {
 
   for (var i = 0; i < 81; ++i) {
     var v = parseInt(puzzle[i]) | 0;
-    var r = Math.floor(i / 9);
+    var r = ~~(i / 9);
     var c = i % 9;
     var cell = board[r][c];
     cell.v = v;
@@ -230,7 +231,7 @@ function check_stat() {
     for (var c = 0; c < 9; ++c) {
       var v;
       if (v = board[r][c].v) {
-        var b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        var b = ~~(r / 3) * 3 + ~~(c / 3);
         if (rs[r][v] || cs[c][v] || bs[b][v]) {
           // conflict
           conflict = true;
@@ -252,7 +253,7 @@ function fill_candidate() {
     for (var c = 0; c < 9; ++c)
       if (board[r][c].clue) {
         var v = board[r][c].v;
-        var b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        var b = ~~(r / 3) * 3 + ~~(c / 3);
         rs[r][v] = cs[c][v] = bs[b][v] = true;
       }
 
@@ -295,12 +296,18 @@ function find_hidden_single() {
   });
 }
 function find_naked_single() {
-  [...document.querySelectorAll('.sdk-cell')]
-    .map(e => e.cell)
+  let found = true;
+  while (found) {
+    // console.log('--------');
+    let ns_ls = find_naked_single_one();
+    ns_ls.forEach(h => set_value_cell_update_v3(h.cell, h.v));
+    found = ns_ls.length;
+  }
+}
+function find_naked_single_one() {
+  return seqcell
     .filter(c => !c.v && c.cand_ls.length == 1)
-    .forEach(c => {
-      console.log(`candidate ${c.cand_ls[0].v} is naked single in cell ${c.r}-${c.c}`);
-    });
+    .map(c => ({ cell: c, v: c.cand_ls[0].v }));
 }
 
 function find_first_hidden_single(c) {
@@ -547,15 +554,20 @@ function set_value_cell_update_v2(cell, v) {
   }
   return affect;
 }
+//==========================================
+function find_pointing_pair() {
+  
+}
 //============Fastest and most naive=======================
 function find_hidden_single_all_v3() {
   var found = true;
   while (found) {
     found = false;
     // console.log('--------');
-    find_hidden_single_all_naive().forEach(h => {
+    let hs_ls = find_hidden_single_all_naive();
+    found = hs_ls.length > 0;
+    hs_ls.forEach(h => {
       // console.log(`candidate ${h.v} is HS in ${h.group}, cell ${h.cell.r}-${h.cell.c}`);
-      found = true;
       set_value_cell_update_v3(h.cell, h.v);
     });
   }
@@ -676,6 +688,23 @@ function set_value_cell_update_v4(cell, v) {
     });
   }
   return affect;
+}
+//==========================================
+function solve_with_technique(ehs, ens) {
+  let found = true;
+  while (found) {
+    found = false;
+    // console.log('--------');
+    let solved_ls = [];
+    if (ehs)
+      solved_ls = find_hidden_single_all_naive();
+    if (!solved_ls.length && ens)
+      solved_ls = find_naked_single_one();
+
+    solved_ls.forEach(h => set_value_cell_update_v3(h.cell, h.v));
+
+    found = solved_ls.length;
+  }
 }
 //==========================================
 String.prototype.format = function () {

@@ -2,7 +2,7 @@ function categorize_seed(arr_puzz) {
   var group_seed = [];
   arr_puzz.forEach(p => {
     var gs = group_seed.find(
-      g => g.length && check_puzzle_seed(g[0], p)
+      g => check_puzzle_seed(g[0], p)
     );
     gs && gs.push(p) || group_seed.push([p]);
   });

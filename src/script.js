@@ -556,7 +556,133 @@ function set_value_cell_update_v2(cell, v) {
 }
 //==========================================
 function find_pointing_pair() {
-  
+  let ps = [];
+  ARR10.forEach(c =>
+    ARR09.forEach(i => {
+      check_pp_gr_cand(ps, cand[c].b[i], c, 'BLOCK');
+      check_pp_gr_cand(ps, cand[c].r[i], c, 'ROW');
+      check_pp_gr_cand(ps, cand[c].c[i], c, 'COLUMN');
+    })
+  );
+  ps.forEach(p => {
+    console.log(`PP ${p.point_set[0].r}-${p.point_set[0].c} & ${p.point_set[1].r}-${p.point_set[1].c} of candidate ${p.point_v} in ${p.check_gr_type}, affec to ${p.point_gr_type}`);
+  });
+  return ps;
+}
+function check_pp_gr_cand(ps, group, c, t) {
+  if (group.length == 2) {
+    let point_set = [group[0], group[1]];
+    // same block in a row or column
+    if ((t == 'ROW' || t == 'COLUMN') && group[0].b == group[1].b) {
+      // remove c from other cell in block b
+      let point_gr = cand[c].b[group[0].b].filter(
+        cell => !point_set.includes(cell) && cell.cand[c]);
+      if (point_gr.length)
+        ps.push({
+          point_gr: point_gr
+          , point_gr_type: 'BLOCK'
+          , point_set: point_set
+          , point_v: c
+          , check_gr_type: t
+        });
+    }
+    if (t == 'BLOCK') {
+      // same row
+      if (group[0].r == group[1].r) {
+        // remove c from other cell in row r
+        let point_gr = cand[c].r[group[0].r].filter(
+          cell => !point_set.includes(cell) && cell.cand[c]);
+        if (point_gr.length)
+          ps.push({
+            point_gr: point_gr
+            , point_gr_type: 'ROW'
+            , point_set: point_set
+            , point_v: c
+            , check_gr_type: t
+          });
+      }
+      // same column
+      else if (group[0].c == group[1].c) {
+        // remove c from other cell in column c
+        let point_gr = cand[c].c[group[0].c].filter(
+          cell => !point_set.includes(cell) && cell.cand[c]);
+        if (point_gr.length)
+          ps.push({
+            point_gr: point_gr
+            , point_gr_type: 'COLUMN'
+            , point_set: point_set
+            , point_v: c
+            , check_gr_type: t
+          });
+      }
+    }
+  }
+}
+function find_pointing_triple() {
+  let ps = [];
+  ARR10.forEach(c =>
+    ARR09.forEach(i => {
+      check_pt_gr_cand(ps, cand[c].b[i], c, 'BLOCK');
+      check_pt_gr_cand(ps, cand[c].r[i], c, 'ROW');
+      check_pt_gr_cand(ps, cand[c].c[i], c, 'COLUMN');
+    })
+  );
+  ps.forEach(p => {
+    console.log(`PT ${p.point_set[0].r}-${p.point_set[0].c}, ${p.point_set[1].r}-${p.point_set[1].c} & ${p.point_set[2].r}-${p.point_set[2].c} of candidate ${p.point_v} in ${p.check_gr_type}, affec to ${p.point_gr_type}`);
+  });
+  return ps;
+}
+function check_pt_gr_cand(ps, group, c, t) {
+  if (group.length == 3) {
+    let point_set = [group[0], group[1], group[2]];
+    // same block in a row or column
+    if ((t == 'ROW' || t == 'COLUMN') && group[0].b == group[1].b == group[2].b) {
+      // remove c from other cell in block b
+      let point_gr = cand[c].b[group[0].b].filter(
+        cell => !point_set.includes(cell) && cell.cand[c]);
+      if (point_gr.length)
+        ps.push({
+          point_gr: point_gr
+          , point_gr_type: 'BLOCK'
+          , point_set: point_set
+          , point_v: c
+          , check_gr_type: t
+        });
+    }
+    if (t == 'BLOCK') {
+      // same row
+      if (group[0].r == group[1].r == group[2].r) {
+        // remove c from other cell in row r
+        let point_gr = cand[c].r[group[0].r].filter(
+          cell => !point_set.includes(cell) && cell.cand[c]);
+        if (point_gr.length)
+          ps.push({
+            point_gr: point_gr
+            , point_gr_type: 'ROW'
+            , point_set: point_set
+            , point_v: c
+            , check_gr_type: t
+          });
+      }
+      // same column
+      else if (group[0].c == group[1].c == group[2].c) {
+        // remove c from other cell in column c
+        let point_gr = cand[c].c[group[0].c].filter(
+          cell => !point_set.includes(cell) && cell.cand[c]);
+        if (point_gr.length)
+          ps.push({
+            point_gr: point_gr
+            , point_gr_type: 'COLUMN'
+            , point_set: point_set
+            , point_v: c
+            , check_gr_type: t
+          });
+      }
+    }
+  }
+}
+function solve_pointing_set(ps) {
+  ps.point_gr.forEach(c => remove_candidate_from_cell(c, ps.point_v));
 }
 //============Fastest and most naive=======================
 function find_hidden_single_all_v3() {
@@ -690,7 +816,7 @@ function set_value_cell_update_v4(cell, v) {
   return affect;
 }
 //==========================================
-function solve_with_technique(ehs, ens) {
+function solve_with_technique(ehs, ens, epp) {
   let found = true;
   while (found) {
     found = false;
@@ -703,6 +829,11 @@ function solve_with_technique(ehs, ens) {
 
     solved_ls.forEach(h => set_value_cell_update_v3(h.cell, h.v));
 
+    if (!solved_ls.length && epp) {
+      solved_ls = find_pointing_pair();
+      if (solved_ls.length)
+        solved_ls.forEach(ps => solve_pointing_set(ps));
+    }
     found = solved_ls.length;
   }
 }

@@ -1,3 +1,5 @@
+"use strict";
+
 function categorize_seed(arr_puzz) {
   var group_seed = [];
   arr_puzz.forEach(p => {

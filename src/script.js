@@ -351,9 +351,9 @@ function find_hidden_single_all_naive() {
 function find_hidden_single_at_cell(cell, c) {
   var hs = [];
 
-  group_check_add_hs(hs, cand[c].b[cell.b]);
-  group_check_add_hs(hs, cand[c].r[cell.r]);
-  group_check_add_hs(hs, cand[c].c[cell.c]);
+  group_check_add_hs(hs, cand[c].b[cell.b], c);
+  group_check_add_hs(hs, cand[c].r[cell.r], c);
+  group_check_add_hs(hs, cand[c].c[cell.c], c);
 
   // return only non empty;
   return hs.filter(n => n);
@@ -424,9 +424,9 @@ function remove_candidate_from_cell(c, v) {
   c.cand[v] = false;
   c.cand_ls.remove(cand[v]);
 
-  cand[v].r[c.r].remove(c);
-  cand[v].c[c.c].remove(c);
-  cand[v].b[c.b].remove(c);
+  cand[v].r[c.r].cells.remove(c);
+  cand[v].c[c.c].cells.remove(c);
+  cand[v].b[c.b].cells.remove(c);
 
   //remove from view
   show_cell_candidate(c.dom, v, 0);
@@ -434,19 +434,15 @@ function remove_candidate_from_cell(c, v) {
 function group_check_add_hs(hs, group, v) {
   if (group.length == 1) {
     hs[group.cells[0].i] = hs[group.cells[0].i] || { cell: group.cells[0], v: v, group: [] };
-    hs[group[0].i].group.cells.push(group.house_name);
+    hs[group[0].i].group.push(group.house_name);
   }
 }
 //==========================================
-function get_group_name(id) {
-  var type = ['ROW', 'COLUMN', 'BLOCK'];
-  return `${type[id / 9 | 0]} ${id % 9}`;
-}
 function find_hidden_single_all_at_group(group_id) {
   var hs = [];
 
   ARR10.forEach(c => {
-    group_check_add_hs(hs, cand[c].g[group_id], c, get_group_name(group_id));
+    group_check_add_hs(hs, cand[c].g[group_id], c, cand[c].g[group_id].house_name);
   });
   // return only non empty;
   return hs.filter(n => n);
@@ -538,9 +534,9 @@ function find_pointing_pair() {
   let ps = [];
   ARR10.forEach(c =>
     ARR09.forEach(i => {
-      check_pp_gr_cand(ps, cand[c].b[i], c, 'BLOCK');
-      check_pp_gr_cand(ps, cand[c].r[i], c, 'ROW');
-      check_pp_gr_cand(ps, cand[c].c[i], c, 'COLUMN');
+      check_pp_gr_cand(ps, cand[c].b[i]);
+      check_pp_gr_cand(ps, cand[c].r[i]);
+      check_pp_gr_cand(ps, cand[c].c[i]);
     })
   );
   ps.forEach(p => {
@@ -548,11 +544,12 @@ function find_pointing_pair() {
   });
   return ps;
 }
-function check_pp_gr_cand(ps, group, c, t) {
+function check_pp_gr_cand(ps, group) {
+  let c = group.v;
   if (group.length == 2) {
-    let point_set = [group[0], group[1]];
+    let point_set = [group.cells[0], group.cells[1]];
     // same block in a row or column
-    if ((t == 'ROW' || t == 'COLUMN') && group[0].b == group[1].b) {
+    if ((t == 'ROW' || t == 'COLUMN') && group.cells[0].b == group.cells[1].b) {
       // remove c from other cell in block b
       let point_gr = cand[c].b[group[0].b].filter(
         cell => !point_set.includes(cell) && cell.cand[c]);
@@ -704,7 +701,7 @@ function find_hidden_single_at_group(group_id) {
   var group = cand[v].g[group_c_id];
 
   if (group.length == 1)
-    return { cell: group[0], v: v, group: [get_group_name(group_c_id)] };
+    return { cell: group.cells[0], v: v, group: [group.house_name] };
 }
 function find_hidden_single_all_v4() {
   var mark_affect = []

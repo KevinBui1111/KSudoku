@@ -11,7 +11,6 @@ var ARR10 = [, 1, 2, 3, 4, 5, 6, 7, 8, 9];
   type: row/col/block
   id: 0-26 (9 + 9 + 9)
 */
-var block = []; // block[n][i] refer the cell ith in block nth
 var cand = [];
 /*
 cand[1..9] {
@@ -36,18 +35,11 @@ var board = []
 
 $(document).ready(function () {
   document.querySelectorAll('.sdk-cell').forEach((e, i) => {
-    var r = ~~(i / 27) * 3 + ~~((i % 9) / 3)
+    let r = ~~(i / 27) * 3 + ~~((i % 9) / 3)
       , b = ~~(i / 9)
       , c = ~~(b % 3) * 3 + i % 3;
     board[r] = board[r] || [];
-    board[r][c] = {
-      dom: e,
-      r: r, c: c, b: b, v: undefined, i: i,
-      cand: [],
-      cand_ls: []
-    };
-    (block[b] = block[b] || [])[i % 9] = board[r][c];
-    seqcell[i] = e.cell = board[r][c];
+    seqcell[i] = e.cell = board[r][c] = new Cell(e, r, c, b, i);
   });
 
   reset_candidate();
@@ -145,20 +137,7 @@ function show_cell_candidate(e, v, show) {
     e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
 }
 function reset_candidate() {
-  cand = ARR10.map(i => {
-    var c = {
-      v: i,
-      r: ARR09.map(_ => []),
-      c: ARR09.map(_ => []),
-      b: ARR09.map(_ => []),
-      g: []
-    };
-    c.g.push.apply(c.g, c.r);
-    c.g.push.apply(c.g, c.c);
-    c.g.push.apply(c.g, c.b);
-
-    return c;
-  });
+  cand = ARR10.map(i => new Candidate(i));
 }
 function clear_candidate(e) {
   var list_cand = e.getElementsByClassName('is-cand');
@@ -271,9 +250,9 @@ function fill_candidate() {
 
           if (cell.cand[v]) {
             cell.cand_ls.push(cand[v]);
-            cand[v].r[r].push(cell);
-            cand[v].c[c].push(cell);
-            cand[v].b[cell.b].push(cell);
+            cand[v].r[r].cells.push(cell);
+            cand[v].c[c].cells.push(cell);
+            cand[v].b[cell.b].cells.push(cell);
           }
 
           show_cell_candidate(cell.dom, v, cell.cand[v]);
@@ -310,7 +289,7 @@ function find_naked_single_one() {
     .map(c => ({ cell: c, v: c.cand_ls[0].v }));
 }
 
-function find_first_hidden_single(c) {
+/*function find_first_hidden_single(c) {
   var i;
   var first =
     (// search by block first
@@ -341,14 +320,14 @@ function find_first_hidden_single(c) {
     )
     ;
   return first;
-}
+}*/
 function find_hidden_single_naive(c) {
   var hs = [];
 
   ARR09.forEach(i => {
-    group_check_add_hs(hs, cand[c].b[i], c, 'BLOCK');
-    group_check_add_hs(hs, cand[c].r[i], c, 'ROW');
-    group_check_add_hs(hs, cand[c].c[i], c, 'COLUMN');
+    group_check_add_hs(hs, cand[c].b[i], c);
+    group_check_add_hs(hs, cand[c].r[i], c);
+    group_check_add_hs(hs, cand[c].c[i], c);
   });
 
   // return only non empty;
@@ -359,9 +338,9 @@ function find_hidden_single_all_naive() {
 
   ARR10.forEach(c =>
     ARR09.forEach(i => {
-      group_check_add_hs(hs, cand[c].b[i], c, 'BLOCK');
-      group_check_add_hs(hs, cand[c].r[i], c, 'ROW');
-      group_check_add_hs(hs, cand[c].c[i], c, 'COLUMN');
+      group_check_add_hs(hs, cand[c].b[i], c);
+      group_check_add_hs(hs, cand[c].r[i], c);
+      group_check_add_hs(hs, cand[c].c[i], c);
     })
   );
 
@@ -372,9 +351,9 @@ function find_hidden_single_all_naive() {
 function find_hidden_single_at_cell(cell, c) {
   var hs = [];
 
-  group_check_add_hs(hs, cand[c].b[cell.b], 'BLOCK');
-  group_check_add_hs(hs, cand[c].r[cell.r], 'ROW');
-  group_check_add_hs(hs, cand[c].c[cell.c], 'COLUMN');
+  group_check_add_hs(hs, cand[c].b[cell.b]);
+  group_check_add_hs(hs, cand[c].r[cell.r]);
+  group_check_add_hs(hs, cand[c].c[cell.c]);
 
   // return only non empty;
   return hs.filter(n => n);
@@ -384,9 +363,9 @@ function find_hidden_single_all_at_cell(cell) {
   var group;
 
   ARR10.forEach(c => {
-    group_check_add_hs(hs, cand[c].b[cell.b], c, 'BLOCK');
-    group_check_add_hs(hs, cand[c].r[cell.r], c, 'ROW');
-    group_check_add_hs(hs, cand[c].c[cell.c], c, 'COLUMN');
+    group_check_add_hs(hs, cand[c].b[cell.b], c);
+    group_check_add_hs(hs, cand[c].r[cell.r], c);
+    group_check_add_hs(hs, cand[c].c[cell.c], c);
   });
   // return only non empty;
   return hs.filter(n => n);
@@ -452,10 +431,10 @@ function remove_candidate_from_cell(c, v) {
   //remove from view
   show_cell_candidate(c.dom, v, 0);
 }
-function group_check_add_hs(hs, group, v, group_txt) {
+function group_check_add_hs(hs, group, v) {
   if (group.length == 1) {
-    hs[group[0].i] = hs[group[0].i] || { cell: group[0], v: v, group: [] };
-    hs[group[0].i].group.push(group_txt);
+    hs[group.cells[0].i] = hs[group.cells[0].i] || { cell: group.cells[0], v: v, group: [] };
+    hs[group[0].i].group.cells.push(group.house_name);
   }
 }
 //==========================================

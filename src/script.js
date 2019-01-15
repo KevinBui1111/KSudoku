@@ -490,9 +490,9 @@ function set_value_cell_update_v2(cell, v) {
   // remove candidate from block, row, col
   var affect_ls = [], affect = [];
   // ARR09.forEach(i => {
-  sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
-  sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
-  sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
+  sub_check_remove_cand(cand[v].r[cell.r]); // column
+  sub_check_remove_cand(cand[v].c[cell.c]); // row
+  sub_check_remove_cand(cand[v].b[cell.b]); // block
   // });
   // add row, column, block of this cell
   if (!affect_ls[cell.r]) {
@@ -508,8 +508,9 @@ function set_value_cell_update_v2(cell, v) {
     affect.push(9 + cell.c);
   }
 
-  function sub_check_remove_cand(g, t) {
-    g.map(c => c).forEach(c => {
+  function sub_check_remove_cand(g) {
+    let t = g.house_name;
+    g.cells.map(c => c).forEach(c => {
       // if (c.v || !c.cand[v]) return;
 
       if (!affect_ls[c.r] && t != 'ROW') {
@@ -688,7 +689,7 @@ function set_value_cell_update_v3(cell, v) {
   sub_check_remove_cand(cand[v].b[cell.b]);
 
   function sub_check_remove_cand(g) {
-    g.map(c => c).forEach(c => {
+    g.cells.map(c => c).forEach(c => {
       if (c.cand[v]) remove_candidate_from_cell(c, v);
     });
   }
@@ -748,9 +749,9 @@ function set_value_cell_update_v4(cell, v) {
   cell.cand_ls = [];
   // remove candidate from block, row, col
   // ARR09.forEach(i => {
-  sub_check_remove_cand(cand[v].r[cell.r], 'ROW'); // column
-  sub_check_remove_cand(cand[v].c[cell.c], 'COLUMN'); // row
-  sub_check_remove_cand(cand[v].b[cell.b], 'BLOCK'); // block
+  sub_check_remove_cand(cand[v].r[cell.r]); // column
+  sub_check_remove_cand(cand[v].c[cell.c]); // row
+  sub_check_remove_cand(cand[v].b[cell.b]); // block
   // });
   // add row, column, block of this cell
   sub_add_group_affect(v);
@@ -770,8 +771,9 @@ function set_value_cell_update_v4(cell, v) {
     }
   }
 
-  function sub_check_remove_cand(g, t) {
-    g.map(c => c).forEach(c => {
+  function sub_check_remove_cand(g) {
+    let t = g.house_name;
+    g.cells.map(c => c).forEach(c => {
       // if (c.v || !c.cand[v]) return;
 
       if (!affect_ls[v * 27 + c.r] && t != 'ROW') {

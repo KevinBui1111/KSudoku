@@ -434,7 +434,7 @@ function remove_candidate_from_cell(c, v) {
 function group_check_add_hs(hs, group, v) {
   if (group.length == 1) {
     hs[group.cells[0].i] = hs[group.cells[0].i] || { cell: group.cells[0], v: v, group: [] };
-    hs[group[0].i].group.push(group.house_name);
+    hs[group.cells[0].i].group.push(group.house_name);
   }
 }
 //==========================================

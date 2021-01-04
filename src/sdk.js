@@ -7,8 +7,8 @@ class Cell {
   constructor(e, r, c, b, i) {
     //https://javascript.info/destructuring-assignment
     [this.dom
-      , this.r, this.c, this.b, this.i, this.v
-      , this.cand, this.cand_ls] = [e, r, c, b, i, undefined, [], []];
+      , this.r, this.c, this.b, this.i
+      , this.v, this.cand, this.cand_ls] = [e, r, c, b, i, undefined, [], []];
   }
 
   toString() {
@@ -19,9 +19,9 @@ class Cell {
 class Candidate {
   constructor(v) {
     this.v = v;
-    this.r = ARR09.map(nth => new CandHouse(v, nth, 0));
-    this.c = ARR09.map(nth => new CandHouse(v, nth, 1));
-    this.b = ARR09.map(nth => new CandHouse(v, nth, 2));
+    this.r = ARR08.map(nth => new CandHouse(v, nth, 0));
+    this.c = ARR08.map(nth => new CandHouse(v, nth, 1));
+    this.b = ARR08.map(nth => new CandHouse(v, nth, 2));
     this.h = []; //house by ith
     this.h.push.apply(this.h, this.r);
     this.h.push.apply(this.h, this.c);

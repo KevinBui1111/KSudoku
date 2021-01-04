@@ -7,6 +7,7 @@
   <script src="jquery-3.3.1.min.js"></script>
 
   <script src="script.js"></script>
+  <script src="sdk-function.js"></script>
   <script src="sdk-seed.js"></script>
   <script src="sdk.js"></script>
   <script src="sudoku-data.js"></script>
@@ -1022,9 +1023,9 @@
     </div>
     <div class="puzzle">
       <input type="text" id="txt-puzzle" />
-      <input type="button" value="Import" onclick="import_from_text();" />
+      <input type="button" value="Import" onclick="ui_import_from_text();" />
       <input type="button" value="Export" onclick="export_to_text();" />
-      <input type="button" value="Fill candidate" onclick="fill_candidate();" />
+      <input type="button" value="Fill candidate" onclick="ui_fill_candidate();" />
       <input type="button" value="Hidden Single" onclick="find_hs();" />
     </div>
   </div>

@@ -58,18 +58,7 @@ function fill_candidate() {
   for (let r = 0; r < 9; ++r)
     for (let c = 0; c < 9; ++c)
       if (!board[r][c].v) {
-        let cell = board[r][c];
-        cell.cand_ls = [];
-        for (let v = 1; v <= 9; ++v) {
-          cell.cand[v] = !affect.rs[r][v] && !affect.cs[c][v] && !affect.bs[cell.b][v];
-
-          if (cell.cand[v]) {
-            cell.cand_ls.push(cand[v]);
-            cand[v].r[r].cells.push(cell);
-            cand[v].c[c].cells.push(cell);
-            cand[v].b[cell.b].cells.push(cell);
-          }
-        }
+        add_all_candidate_into_cell(board[r][c]);
       }
 }
 function reset_candidate() {
@@ -130,22 +119,25 @@ function set_value_cell_update_v5(cell, v) {
   return affect_set;
 }
 function remove_value_cell_update(cell) {
-  if (cell.v) { console.log('BAD remove_value_cell_update'); return; }
+  if (!cell.v) { console.log('BAD remove_value_cell_update'); return; }
   // update this cell
   let v = cell.v;
-  cell.v = 0;
-  // cell.cand[v] = true;
   // update affect
   affect.rs[cell.r][v] = affect.cs[cell.c][v] = affect.bs[cell.b][v] = false;
 
   // find cell has candidate v, affect by cell
   let affect_set = new Set();
   board[cell.r].forEach(c => { if (!c.v) affect_set.add(c); });
-  board[cell.c].forEach(c => { if (!c.v) affect_set.add(c); });
-  board[cell.b].forEach(c => { if (!c.v) affect_set.add(c); });
+  ARR08.forEach(i => { if (!board[i][cell.c].v) affect_set.add(board[i][cell.c]); });
+  ARR08.forEach(i => { if (!seqcell[cell.b * 9 + i].v) affect_set.add(seqcell[cell.b * 9 + i]); });
 
-  // remove candidate from cell in affect_set
-  return affect_set.filter(c => add_candidate_into_cell(c, v));
+  // update all candidate for cell
+  cell.v = 0;
+  add_all_candidate_into_cell(cell);
+  // add candidate from cell in affect_set
+  affect_set = [...affect_set].filter(c => add_candidate_into_cell(c, v));
+  affect_set.push(cell);
+  return affect_set;
 }
 function remove_candidate_from_cell(cell, v, ir = true, ic = true, ib = true) {
   cell.cand[v] = false;
@@ -160,11 +152,15 @@ function add_candidate_into_cell(cell, v) {
 
   if (cell.cand[v]) {
     cell.cand_ls.push(cand[v]);
-    cand[v].r[r].cells.push(cell);
-    cand[v].c[c].cells.push(cell);
+    cand[v].r[cell.r].cells.push(cell);
+    cand[v].c[cell.c].cells.push(cell);
     cand[v].b[cell.b].cells.push(cell);
   }
   return cell.cand[v];
+}
+function add_all_candidate_into_cell(cell) {
+  cell.cand_ls = [];
+  ARR19.forEach(v => add_candidate_into_cell(cell, v));
 }
 function check_complete() {
   for (var r = 0; r < 9; ++r)

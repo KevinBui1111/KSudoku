@@ -140,7 +140,7 @@ function ui_fill_candidate() {
 }
 function ui_update_cell(cells) {
   cells.forEach(cell => {
-    if (cell.v > 0) cell.dom.firstElementChild.innerHTML = cell.v;
+    cell.dom.firstElementChild.innerHTML = cell.v > 0 ? cell.v : '';
     ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand[v]));
   });
 }

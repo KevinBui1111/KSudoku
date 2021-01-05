@@ -89,12 +89,15 @@ function set_value_cell(e, value) {
   if (!note_mode) {
     clear_candidate(e);
 
-    if (value == 0)
+    if (value == 0) {
       e.firstElementChild.innerHTML = '';
+      if (!create_mode) ui_remove_value_cell(e);
+    }
     else if (value > 0) {
       e.firstElementChild.innerHTML = value;
 
       if (create_mode) e.classList.add('clue');
+      else ui_set_value_cell(e, value);
     }
   }
   else if (value > 0) {
@@ -130,7 +133,7 @@ function ui_import_from_text() {
   set_mode(undefined, false);
 }
 function ui_fill_candidate() {
-    // go through and set candidate for each cell.
+  // go through and set candidate for each cell.
   seqcell
     .filter(c => !c.v)
     .forEach(cell =>
@@ -143,6 +146,24 @@ function ui_update_cell(cells) {
     cell.dom.firstElementChild.innerHTML = cell.v > 0 ? cell.v : '';
     ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand[v]));
   });
+}
+function ui_set_value_cell(e, v) {
+  let _
+    , rem_affect = e.cell.v ? remove_value_cell_update(e.cell) : []
+    , conflict = check_affect(e.cell, v)
+    , affect_set = set_value_cell_update_v5(e.cell, v);
+  rem_affect.forEach(affect_set.add, affect_set);
+  ui_update_cell(affect_set);
+
+  if (conflict) {
+    e.firstElementChild.innerHTML = v;
+    e.classList.add('conflict');
+    console.log('CONFLICT ui_set_value_cell');
+  }
+}
+function ui_remove_value_cell(e) {
+  let affect_cells = remove_value_cell_update(e.cell);
+  ui_update_cell(affect_cells);
 }
 function set_mode(note, create) {
   if (note != null) {

@@ -87,6 +87,12 @@ function check_stat() {
   return conflict;
 }
 function set_value_cell_update_v5(cell, v) {
+  if (check_affect(cell, v)) {
+    console.log('CONFLICT set_value_cell_update_v5');
+    return new Set();
+  }
+  // check already has value
+  let rem_affect = cell.v ? remove_value_cell_update(cell) : [];
   // update this cell
   cell.v = v;
   cell.cand.forEach((_, i, b) => b[i] = false); //reset to false
@@ -115,11 +121,11 @@ function set_value_cell_update_v5(cell, v) {
       , c.c !== cell.c
       , c.b !== cell.b)
   );
-
+  rem_affect.forEach(affect_set.add, affect_set);
   return affect_set;
 }
 function remove_value_cell_update(cell) {
-  if (!cell.v) { console.log('BAD remove_value_cell_update'); return; }
+  if (!cell.v) { console.log('BAD remove_value_cell_update'); return [cell]; }
   // update this cell
   let v = cell.v;
   // update affect
@@ -161,6 +167,9 @@ function add_candidate_into_cell(cell, v) {
 function add_all_candidate_into_cell(cell) {
   cell.cand_ls = [];
   ARR19.forEach(v => add_candidate_into_cell(cell, v));
+}
+function check_affect(cell, v) {
+  return affect.rs[cell.r][v] || affect.cs[cell.c][v] || affect.bs[cell.b][v];
 }
 function check_complete() {
   for (var r = 0; r < 9; ++r)

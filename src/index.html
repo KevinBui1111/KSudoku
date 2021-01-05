@@ -1024,9 +1024,9 @@
     <div class="puzzle">
       <input type="text" id="txt-puzzle" />
       <input type="button" value="Import" onclick="ui_import_from_text();" />
-      <input type="button" value="Export" onclick="export_to_text();" />
-      <input type="button" value="Fill candidate" onclick="ui_fill_candidate();" />
-      <input type="button" value="Hidden Single" onclick="find_hs();" />
+      <input type="button" value="Export" onclick="export_puzzle();" />
+      <input type="checkbox" id="chk-onoff-cand" onchange="ui_onoff_candidate(this);"/>
+      <label for="chk-onoff-cand">Show candidate</label>
     </div>
   </div>
   <div>

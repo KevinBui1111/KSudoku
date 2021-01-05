@@ -1,7 +1,7 @@
 "use strict";
 
 let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-  , ARR19 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  , ARR19 = [ , 1, 2, 3, 4, 5, 6, 7, 8, 9]
   /*
     i: index
     type: row/col/block
@@ -28,15 +28,15 @@ let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
   }
   */
   , seqcell = []
-  , affect = {}
+  , affect = {
+      rs: ARR08.map(() => [])
+    , cs: ARR08.map(() => [])
+    , bs: ARR08.map(() => [])
+  }
   ;
 
 
 function import_puzzle(puzzle) {
-  affect.rs = ARR08.map(() => [])
-  affect.cs = ARR08.map(() => [])
-  affect.bs = ARR08.map(() => []);
-
   for (let i = 0; i < 81; ++i) {
     let r = ~~(i / 9)
       , c = i % 9
@@ -62,7 +62,7 @@ function fill_candidate() {
       }
 }
 function reset_candidate() {
-  cand = [,...ARR19.map(i => new Candidate(i))]; // add empty at head
+  cand = ARR19.map(i => new Candidate(i)); // add empty at head
 }
 function check_stat() {
   let rs = ARR08.map(() => []) // ommit 0, count 1..9

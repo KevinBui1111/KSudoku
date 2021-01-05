@@ -8,7 +8,7 @@ class Cell {
     //https://javascript.info/destructuring-assignment
     [this.dom
       , this.r, this.c, this.b, this.i
-      , this.v, this.cand, this.cand_ls] = [e, r, c, b, i, undefined, [], []];
+      , this.v, this.cand, this.cand_ls] = [e, r, c, b, i, undefined, ARR19.map(c => true), []];
   }
 
   toString() {

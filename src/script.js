@@ -70,12 +70,20 @@ $(document).ready(function () {
     if (this == btn_create && !create_mode) {
       save_view_to_data();
       check_stat();
-      console.log(export_puzzle());
     }
   });
 });
 function show_on_ui(e) {
   show_ui_mode = e.checked;
+}
+function ui_onoff_candidate(e) {
+  // go through and set candidate for each cell.
+  seqcell
+    .filter(c => !c.v)
+    .forEach(cell =>
+      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand[c] && e.checked)
+    )
+  );
 }
 function set_value_cell(e, value) {
   if (!show_ui_mode) return;
@@ -133,13 +141,7 @@ function ui_import_from_text() {
   set_mode(undefined, false);
 }
 function ui_fill_candidate() {
-  // go through and set candidate for each cell.
-  seqcell
-    .filter(c => !c.v)
-    .forEach(cell =>
-      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand[c])
-    )
-  );
+
 }
 function ui_update_cell(cells) {
   cells.forEach(cell => {
@@ -186,12 +188,16 @@ function save_view_to_data() {
   });
 }
 function export_puzzle() {
-  var res = '';
+  var ex_clue = ''
+    , ex_val = '';
   for (var r = 0; r < 9; ++r)
-    for (var c = 0; c < 9; ++c)
-      res += (board[r][c].v > 0 && board[r][c].clue) ? board[r][c].v : '.';
+    for (var c = 0; c < 9; ++c) {
+      ex_clue += board[r][c].clue ? board[r][c].v : '.';
+      ex_val += board[r][c].v ? board[r][c].v : '.';
+    }
 
-  return res;
+  console.log(ex_clue);
+  console.log(ex_val);
 }
 
 function find_naked_single() {

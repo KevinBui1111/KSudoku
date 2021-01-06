@@ -7,7 +7,7 @@ let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     type: row/col/block
     id: 0-26 (9 + 9 + 9)
   */
-  , cand = []
+  , cand = ARR19.map(i => new Candidate(i))
   /*
   cand[1..9] {
     v: number 1..9
@@ -35,8 +35,17 @@ let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
   }
   ;
 
+let initial_board = _ => {
+  affect.rs.forEach(s => ARR19.forEach(v => s[v] = false));
+  affect.cs.forEach(s => ARR19.forEach(v => s[v] = false));
+  affect.bs.forEach(s => ARR19.forEach(v => s[v] = false));
 
+  cand.forEach(c => ARR08.forEach(i => c.r[i].cells = []));
+  cand.forEach(c => ARR08.forEach(i => c.c[i].cells = []));
+  cand.forEach(c => ARR08.forEach(i => c.b[i].cells = []));
+}
 function import_puzzle(puzzle) {
+  initial_board();
   for (let i = 0; i < 81; ++i) {
     let r = ~~(i / 9)
       , c = i % 9
@@ -52,17 +61,12 @@ function import_puzzle(puzzle) {
   fill_candidate();
 }
 function fill_candidate() {
-  reset_candidate();
-
   // go through and set candidate for each cell.
   for (let r = 0; r < 9; ++r)
     for (let c = 0; c < 9; ++c)
       if (!board[r][c].v) {
         add_all_candidate_into_cell(board[r][c]);
       }
-}
-function reset_candidate() {
-  cand = ARR19.map(i => new Candidate(i)); // add empty at head
 }
 function check_stat() {
   let rs = ARR08.map(() => []) // ommit 0, count 1..9
@@ -79,7 +83,7 @@ function check_stat() {
       if (cell.v) {
         if (rs[r][v] || cs[c][v] || bs[b][v])
           // conflict
-          conflict.push(cell);//.dom.classList.add('conflict');
+          conflict.push(cell);
         else
           rs[r][v] = cs[c][v] = bs[b][v] = true;
       }

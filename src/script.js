@@ -1,10 +1,9 @@
 "use strict";
 
-var show_ui_mode = false;
-var note_mode = 0;
-var create_mode = 0;
-var btn_note, btn_create;
-
+let show_ui_mode = false
+  , note_mode = 0
+  , create_mode = 0
+  , btn_note, btn_create, chk_onoff_cand, chk_auto_cand;
 
 $(document).ready(function () {
   document.querySelectorAll('.sdk-cell').forEach((e, i) => {
@@ -15,10 +14,10 @@ $(document).ready(function () {
     seqcell[i] = e.cell = board[r][c] = new Cell(e, r, c, b, i);
   });
 
-  reset_candidate();
-
   btn_note = document.getElementsByClassName('btn-note')[0];
   btn_create = document.getElementsByClassName('btn-create')[0];
+  chk_onoff_cand = document.getElementById('chk-onoff-cand');
+  chk_auto_cand = document.getElementById('chk-auto-cand');
 
   document.querySelector("#chk-show-ui").click();
 
@@ -65,25 +64,25 @@ $(document).ready(function () {
   $(".btn-note, .btn-create").click(function () {
     this.classList.toggle("active");
     note_mode = btn_note.classList.contains('active');
-    create_mode = btn_create.classList.contains('active');
 
-    if (this == btn_create && !create_mode) {
+    if (this == btn_create && create_mode) {
       save_view_to_data();
-      check_stat();
+      let conflict = check_stat();
+      if (conflict.length) { // invalid
+        this.classList.toggle("active");
+        conflict.forEach(c => c.dom.classList.add('conflict'));
+      }
+      else { // valid
+        create_mode = false;
+        let puzz = export_puzzle()[0];
+        import_puzzle(puzz);
+      }
     }
   });
+  ui_import_from_text();
 });
 function show_on_ui(e) {
   show_ui_mode = e.checked;
-}
-function ui_onoff_candidate(e) {
-  // go through and set candidate for each cell.
-  seqcell
-    .filter(c => !c.v)
-    .forEach(cell =>
-      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand[c] && e.checked)
-    )
-  );
 }
 function set_value_cell(e, value) {
   if (!show_ui_mode) return;
@@ -110,8 +109,24 @@ function set_value_cell(e, value) {
   }
   else if (value > 0) {
     e.firstElementChild.innerHTML = '';
-    show_cell_candidate(e, value, 2);
+    ui_toggle_cand(e, value);
   }
+}
+let ui_toggle_cand = (e, v) => {
+  let cand_e = e.getElementsByClassName('sdk-cand')[v - 1].classList.contains('is-cand');
+  if (cand_e) {
+    remove_candidate_from_cell(e.cell, v);
+    show_cell_candidate(e, v, 0);
+  }
+  else ui_set_cand_cell(e, v);
+}
+let ui_set_cand_cell = (e, v) => {
+  let _
+    , rem_affect = e.cell.v ? remove_value_cell_update(e.cell) : []
+    , valid = add_candidate_into_cell(e.cell, v)
+    , _0 = ui_update_cell([e.cell, ...rem_affect])
+    , _1 = show_cell_candidate(e, v, valid) // force
+  ;
 }
 function show_cell_candidate(e, v, show) {
   if (!show_ui_mode) return;
@@ -139,14 +154,29 @@ function ui_import_from_text() {
     set_value_cell(cell.dom, cell.v)
   );
   set_mode(undefined, false);
+
+  ui_fill_candidate();
+}
+function ui_auto_candidate() {
+  if (chk_auto_cand.checked) {
+    chk_onoff_cand.checked = true;
+    ui_fill_candidate();
+  }
 }
 function ui_fill_candidate() {
-
+  // go through and set candidate for each cell.
+  seqcell
+    .filter(c => !c.v)
+    .forEach(cell =>
+      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand[c] && chk_onoff_cand.checked)
+    )
+  );
 }
 function ui_update_cell(cells) {
   cells.forEach(cell => {
     cell.dom.firstElementChild.innerHTML = cell.v > 0 ? cell.v : '';
-    ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand[v]));
+    if (chk_auto_cand.checked)
+      ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand[v]));
   });
 }
 function ui_set_value_cell(e, v) {
@@ -188,16 +218,15 @@ function save_view_to_data() {
   });
 }
 function export_puzzle() {
-  var ex_clue = ''
+  let ex_clue = ''
     , ex_val = '';
-  for (var r = 0; r < 9; ++r)
-    for (var c = 0; c < 9; ++c) {
+  for (let r = 0; r < 9; ++r)
+    for (let c = 0; c < 9; ++c) {
       ex_clue += board[r][c].clue ? board[r][c].v : '.';
       ex_val += board[r][c].v ? board[r][c].v : '.';
     }
 
-  console.log(ex_clue);
-  console.log(ex_val);
+  return [ex_clue, ex_val];
 }
 
 function find_naked_single() {

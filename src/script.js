@@ -94,8 +94,6 @@ function set_value_cell(e, value) {
   value = parseInt(value) | 0;
 
   if (!note_mode) {
-    clear_candidate(e);
-
     if (value == 0) {
       e.firstElementChild.innerHTML = '';
       if (!create_mode) ui_remove_value_cell(e);
@@ -136,13 +134,6 @@ function show_cell_candidate(e, v, show) {
     e.getElementsByClassName('sdk-cand')[v - 1].classList.remove('is-cand');
   else
     e.getElementsByClassName('sdk-cand')[v - 1].classList.toggle("is-cand");
-}
-
-function clear_candidate(e) {
-  var list_cand = e.getElementsByClassName('is-cand');
-  while (list_cand[0]) {
-    list_cand[0].classList.remove('is-cand');
-  }
 }
 //=============================================================
 function ui_import_from_text() {
@@ -264,7 +255,7 @@ function group_check_add_hs(hs, group, v) {
     hs[group.cells[0].i].group.push(group.house_name);
   }
 }
-//==========================================
+//==================== Lock Candidate / Intersection ======================
 function find_pointing_pair() {
   let ps = [];
   ARR19.forEach(c =>
@@ -275,7 +266,7 @@ function find_pointing_pair() {
     })
   );
   ps.forEach(p => {
-    console.log(`PP ${p.point_set[0].r}-${p.point_set[0].c} & ${p.point_set[1].r}-${p.point_set[1].c} of candidate ${p.point_v} in ${p.check_gr_type}, affect to ${p.point_gr_type}`);
+    console.log(`Candidate ${p.point_v} only in cells ${p.point_set[0].index_in_group(p.check_gr.house_name)}, ${p.point_set[1].index_in_group(p.check_gr.house_name)} of ${p.check_gr.house_name}-${p.check_gr.nth + 1}, affect to ${p.point_gr_type}`);
   });
   return ps;
 }
@@ -287,14 +278,14 @@ function check_pp_gr_cand(ps, group) {
     if ((group.house_name == 'ROW' || group.house_name == 'COLUMN') && group.cells[0].b == group.cells[1].b) {
       // remove c from other cell in block b
       let point_gr = cand[c].b[group.cells[0].b].cells.filter(
-        cell => !point_set.includes(cell) && cell.cand[c]);
+        cell => !point_set.includes(cell));
       if (point_gr.length)
         ps.push({
-          point_gr: point_gr
-          , point_gr_type: 'BLOCK'
+            point_gr: point_gr
+          , point_gr_type: `BLOCK-${group.cells[0].b + 1}`
           , point_set: point_set
           , point_v: c
-          , check_gr_type: group.house_name
+          , check_gr: group
         });
     }
     if (group.house_name == 'BLOCK') {
@@ -302,28 +293,28 @@ function check_pp_gr_cand(ps, group) {
       if (group.cells[0].r == group.cells[1].r) {
         // remove c from other cell in row r
         let point_gr = cand[c].r[group.cells[0].r].cells.filter(
-          cell => !point_set.includes(cell) && cell.cand[c]);
+          cell => !point_set.includes(cell));
         if (point_gr.length)
           ps.push({
             point_gr: point_gr
-            , point_gr_type: 'ROW'
+            , point_gr_type: `ROW-${group.cells[0].r + 1}`
             , point_set: point_set
             , point_v: c
-            , check_gr_type: group.house_name
+            , check_gr: group
           });
       }
       // same column
       else if (group.cells[0].c == group.cells[1].c) {
         // remove c from other cell in column c
         let point_gr = cand[c].c[group.cells[0].c].cells.filter(
-          cell => !point_set.includes(cell) && cell.cand[c]);
+          cell => !point_set.includes(cell));
         if (point_gr.length)
           ps.push({
             point_gr: point_gr
-            , point_gr_type: 'COLUMN'
+            , point_gr_type: `COLUMN-${group.cells[0].c + 1}`
             , point_set: point_set
             , point_v: c
-            , check_gr_type: group.house_name
+            , check_gr: group
           });
       }
     }
@@ -333,60 +324,61 @@ function find_pointing_triple() {
   let ps = [];
   ARR19.forEach(c =>
     ARR08.forEach(i => {
-      check_pt_gr_cand(ps, cand[c].b[i], c, 'BLOCK');
-      check_pt_gr_cand(ps, cand[c].r[i], c, 'ROW');
-      check_pt_gr_cand(ps, cand[c].c[i], c, 'COLUMN');
+      check_pt_gr_cand(ps, cand[c].b[i]);
+      check_pt_gr_cand(ps, cand[c].r[i]);
+      check_pt_gr_cand(ps, cand[c].c[i]);
     })
   );
   ps.forEach(p => {
-    console.log(`PT ${p.point_set[0].r}-${p.point_set[0].c}, ${p.point_set[1].r}-${p.point_set[1].c} & ${p.point_set[2].r}-${p.point_set[2].c} of candidate ${p.point_v} in ${p.check_gr_type}, affect to ${p.point_gr_type}`);
+    console.log(`Candidate ${p.point_v} only in cells ${p.point_set[0].index_in_group(p.check_gr.house_name)}, ${p.point_set[1].index_in_group(p.check_gr.house_name)}, ${p.point_set[2].index_in_group(p.check_gr.house_name)} of ${p.check_gr.house_name}-${p.check_gr.nth + 1}, affect to ${p.point_gr_type}`);
   });
   return ps;
 }
-function check_pt_gr_cand(ps, group, c, t) {
+function check_pt_gr_cand(ps, group) {
+  let c = group.v;
   if (group.length == 3) {
-    let point_set = [group[0], group[1], group[2]];
+    let point_set = [group.cells[0], group.cells[1], group.cells[2]];
     // same block in a row or column
-    if ((t == 'ROW' || t == 'COLUMN') && group[0].b == group[1].b == group[2].b) {
+    if ((group.house_name == 'ROW' || group.house_name == 'COLUMN') && group.cells[0].b == group.cells[1].b && group.cells[1].b == group.cells[2].b) {
       // remove c from other cell in block b
-      let point_gr = cand[c].b[group[0].b].filter(
-        cell => !point_set.includes(cell) && cell.cand[c]);
+      let point_gr = cand[c].b[group.cells[0].b].cells.filter(
+        cell => !point_set.includes(cell));
       if (point_gr.length)
         ps.push({
           point_gr: point_gr
-          , point_gr_type: 'BLOCK'
+          , point_gr_type: `BLOCK-${group.cells[0].b + 1}`
           , point_set: point_set
           , point_v: c
-          , check_gr_type: t
+          , check_gr: group
         });
     }
-    if (t == 'BLOCK') {
+    if (group.house_name == 'BLOCK') {
       // same row
-      if (group[0].r == group[1].r == group[2].r) {
+      if (group.cells[0].r == group.cells[1].r && group.cells[1].r == group.cells[2].r) {
         // remove c from other cell in row r
-        let point_gr = cand[c].r[group[0].r].filter(
-          cell => !point_set.includes(cell) && cell.cand[c]);
+        let point_gr = cand[c].r[group.cells[0].r].cells.filter(
+          cell => !point_set.includes(cell));
         if (point_gr.length)
           ps.push({
             point_gr: point_gr
-            , point_gr_type: 'ROW'
+            , point_gr_type: `ROW-${group.cells[0].r + 1}`
             , point_set: point_set
             , point_v: c
-            , check_gr_type: t
+            , check_gr: group
           });
       }
       // same column
-      else if (group[0].c == group[1].c == group[2].c) {
+      else if (group.cells[0].c == group.cells[1].c && group.cells[1].c == group.cells[2].c) {
         // remove c from other cell in column c
-        let point_gr = cand[c].c[group[0].c].filter(
-          cell => !point_set.includes(cell) && cell.cand[c]);
+        let point_gr = cand[c].c[group.cells[0].c].cells.filter(
+          cell => !point_set.includes(cell));
         if (point_gr.length)
           ps.push({
             point_gr: point_gr
-            , point_gr_type: 'COLUMN'
+            , point_gr_type: `COLUMN-${group.cells[0].c + 1}`
             , point_set: point_set
             , point_v: c
-            , check_gr_type: t
+            , check_gr: group
           });
       }
     }
@@ -411,8 +403,7 @@ function solve_with_technique(ehs, ens, epp) {
 
     if (!solved_ls.length && epp) {
       solved_ls = find_pointing_pair();
-      if (solved_ls.length)
-        solved_ls.forEach(ps => solve_pointing_set(ps));
+      solved_ls.forEach(ps => solve_pointing_set(ps));
     }
     found = solved_ls.length;
   }

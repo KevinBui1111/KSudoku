@@ -10,7 +10,20 @@ class Cell {
       , this.r, this.c, this.b, this.i
       , this.v, this.cand, this.cand_ls] = [e, r, c, b, i, undefined, ARR19.map(c => true), []];
   }
-
+  index_in_group(g) {
+    let index = 0;
+    switch (g) {
+      case 'ROW':
+        index = this.c + 1;
+        break;
+      case 'COLUMN':
+        index = this.r + 1;
+        break;
+      case 'BLOCK':
+        index = this.i - 9 * this.b + 1;
+    }
+    return index;
+  }
   toString() {
     return `${this.r}-${this.c}`;
   }

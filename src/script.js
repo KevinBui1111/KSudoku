@@ -10,8 +10,10 @@ $(document).ready(function () {
     let r = ~~(i / 27) * 3 + ~~((i % 9) / 3)
       , b = ~~(i / 9)
       , c = ~~(b % 3) * 3 + i % 3;
-    board[r] = board[r] || [];
-    seqcell[i] = e.cell = board[r][c] = new Cell(e, r, c, b, i);
+    e.cell
+      = BOARD.rc[r][c] = BOARD.cr[c][r] = BOARD.bi[b][i % 9]= BOARD.ix[i]
+      = BOARD.hi[r][c] = BOARD.hi[c + 9][r] = BOARD.hi[b + 18][i % 9]
+      = new Cell(e, r, c, b, i);
   });
 
   btn_note = document.getElementsByClassName('btn-note')[0];
@@ -30,25 +32,25 @@ $(document).ready(function () {
       case 37: // left
         var c = (this.cell.c + 8) % 9;
         var r = c == 8 ? (this.cell.r + 8) % 9 : this.cell.r;
-        board[r][c].dom.focus();
+        BOARD.rc[r][c].dom.focus();
         break;
 
       case 39: // right
         var c = (this.cell.c + 1) % 9;
         var r = c == 0 ? (this.cell.r + 1) % 9 : this.cell.r;
-        board[r][c].dom.focus();
+        BOARD.rc[r][c].dom.focus();
         break;
 
       case 38: // up
         var r = (this.cell.r + 8) % 9;
         var c = r == 8 ? (this.cell.c + 8) % 9 : this.cell.c;
-        board[r][c].dom.focus();
+        BOARD.rc[r][c].dom.focus();
         break;
 
       case 40: // down
         var r = (this.cell.r + 1) % 9;
         var c = r == 0 ? (this.cell.c + 1) % 9 : this.cell.c;
-        board[r][c].dom.focus();
+        BOARD.rc[r][c].dom.focus();
         break;
     }
 
@@ -141,7 +143,7 @@ function ui_import_from_text() {
   set_mode(false, true);
   import_puzzle(puzzle);
   // update on ui
-  seqcell.forEach(cell =>
+  BOARD.ix.forEach(cell =>
     set_value_cell(cell.dom, cell.v)
   );
   set_mode(undefined, false);
@@ -156,10 +158,10 @@ function ui_auto_candidate() {
 }
 function ui_fill_candidate() {
   // go through and set candidate for each cell.
-  seqcell
+  BOARD.ix
     .filter(c => !c.v)
     .forEach(cell =>
-      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand[c] && chk_onoff_cand.checked)
+      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand_check(c) && chk_onoff_cand.checked)
     )
   );
 }
@@ -167,7 +169,7 @@ function ui_update_cell(cells) {
   cells.forEach(cell => {
     cell.dom.firstElementChild.innerHTML = cell.v > 0 ? cell.v : '';
     if (chk_auto_cand.checked)
-      ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand[v]));
+      ARR19.forEach(v => show_cell_candidate(cell.dom, v, cell.cand_check(v)));
   });
 }
 function ui_set_value_cell(e, v) {
@@ -213,8 +215,8 @@ function export_puzzle() {
     , ex_val = '';
   for (let r = 0; r < 9; ++r)
     for (let c = 0; c < 9; ++c) {
-      ex_clue += board[r][c].clue ? board[r][c].v : '.';
-      ex_val += board[r][c].v ? board[r][c].v : '.';
+      ex_clue += BOARD.rc[r][c].clue ? BOARD.rc[r][c].v : '.';
+      ex_val += BOARD.rc[r][c].v ? BOARD.rc[r][c].v : '.';
     }
 
   return [ex_clue, ex_val];
@@ -230,91 +232,97 @@ function find_naked_single() {
   }
 }
 function find_naked_single_one() {
-  return seqcell
+  return BOARD.ix
     .filter(c => !c.v && c.cand_ls.length == 1)
-    .map(c => ({ cell: c, v: c.cand_ls[0].v }));
+    .map(c => ({ cell: c, v: c.cand_ls[0] }));
 }
 
 function find_hidden_single_all_naive() {
-  var hs = [];
+  let affect_set = new Set();
 
-  ARR19.forEach(c =>
+  ARR19.forEach(v =>
     ARR08.forEach(i => {
-      group_check_add_hs(hs, cand[c].b[i], c);
-      group_check_add_hs(hs, cand[c].r[i], c);
-      group_check_add_hs(hs, cand[c].c[i], c);
+      group_check_add_hs(affect_set, BOARD.house.b[i].c[v]);
+      group_check_add_hs(affect_set, BOARD.house.r[i].c[v]);
+      group_check_add_hs(affect_set, BOARD.house.c[i].c[v]);
     })
   );
 
   // return only non empty;
-  return hs.filter(n => n);
+  return affect_set.filter(n => n);
 }
-function group_check_add_hs(hs, group, v) {
-  if (group.length == 1) {
-    hs[group.cells[0].i] = hs[group.cells[0].i] || { cell: group.cells[0], v: v, group: [] };
-    hs[group.cells[0].i].group.push(group.house_name);
+function group_check_add_hs(affect_set, hc) {
+  if (hc.length == 1) {
+    let found = affect_set.get(hc.cell_idx[0]) || { cell: hc.cell_idx[0], v: hc.v, group: [] };
+    found.group.push(hc.house.name);
   }
 }
 //==================== Lock Candidate / Intersection ======================
 function find_pointing_pair() {
-  let ps = [];
+  let affect_set = [];
   ARR19.forEach(c =>
     ARR08.forEach(i => {
-      check_pp_gr_cand(ps, cand[c].b[i]);
-      check_pp_gr_cand(ps, cand[c].r[i]);
-      check_pp_gr_cand(ps, cand[c].c[i]);
+      check_pp_gr_cand(affect_set, BOARD.house.b[i].c[v]);
+      check_pp_gr_cand(affect_set, BOARD.house.r[i].c[v]);
+      check_pp_gr_cand(affect_set, BOARD.house.c[i].c[v]);
     })
   );
-  ps.forEach(p => {
-    console.log(`Candidate ${p.point_v} only in cells ${p.point_set[0].index_in_group(p.check_gr.house_name)}, ${p.point_set[1].index_in_group(p.check_gr.house_name)} of ${p.check_gr.house_name}-${p.check_gr.nth + 1}, affect to ${p.point_gr_type}`);
+  affect_set.forEach(p => {
+    console.log(`Candidate ${p.v} only in cells ${p.ps[0].gi[p.check_hc.house.type]}, ${p.ps[1].gi[p.check_hc.house.type]} of ${p.check_hc.house}, affect to ${p.affect_house}`);
   });
-  return ps;
+  return affect_set;
 }
-function check_pp_gr_cand(ps, group) {
-  let c = group.v;
-  if (group.length == 2) {
-    let point_set = [group.cells[0], group.cells[1]];
+function check_pp_gr_cand(affect_set, hc) {
+  if (hc.length == 2) {
+    let ps = [ps0, ps1] = [hc.cell_idx[0], hc.cell_idx[1]];
     // same block in a row or column
-    if ((group.house_name == 'ROW' || group.house_name == 'COLUMN') && group.cells[0].b == group.cells[1].b) {
+    if ((hc.house.name == 'ROW' || hc.house.name == 'COLUMN') && ps0.b == ps1.b) {
       // remove c from other cell in block b
-      let point_gr = cand[c].b[group.cells[0].b].cells.filter(
-        cell => !point_set.includes(cell));
-      if (point_gr.length)
-        ps.push({
-            point_gr: point_gr
-          , point_gr_type: `BLOCK-${group.cells[0].b + 1}`
-          , point_set: point_set
-          , point_v: c
-          , check_gr: group
+      let affect_house = BOARD.house.b[ps0.b]
+        , bit_cell_aff = affect_house.c[v].bit_cell
+          .onoff_bit(ps0.bi, 0)
+          .onoff_bit(ps1.bi, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i])
+      ;
+
+      if (bit_cell_aff)
+        affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
         });
     }
-    if (group.house_name == 'BLOCK') {
+    if (hc.house.name == 'BLOCK') {
       // same row
-      if (group.cells[0].r == group.cells[1].r) {
+      if (ps0.r == ps1.r) {
         // remove c from other cell in row r
-        let point_gr = cand[c].r[group.cells[0].r].cells.filter(
-          cell => !point_set.includes(cell));
-        if (point_gr.length)
-          ps.push({
-            point_gr: point_gr
-            , point_gr_type: `ROW-${group.cells[0].r + 1}`
-            , point_set: point_set
-            , point_v: c
-            , check_gr: group
+        let affect_house = BOARD.house.r[ps0.r]
+          , bit_cell_aff = affect_house.c[v].bit_cell
+            .onoff_bit(ps0.ri, 0)
+            .onoff_bit(ps1.ri, 0)
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ri[ps0.r][i])
+        ;
+        if (bit_cell_aff)
+          affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
           });
       }
       // same column
-      else if (group.cells[0].c == group.cells[1].c) {
+      else if (ps0.c == ps1.c) {
         // remove c from other cell in column c
-        let point_gr = cand[c].c[group.cells[0].c].cells.filter(
-          cell => !point_set.includes(cell));
-        if (point_gr.length)
-          ps.push({
-            point_gr: point_gr
-            , point_gr_type: `COLUMN-${group.cells[0].c + 1}`
-            , point_set: point_set
-            , point_v: c
-            , check_gr: group
+        let affect_house = BOARD.house.c[ps0.c]
+          , bit_cell_aff = affect_house.c[v].bit_cell
+            .onoff_bit(ps0.ri, 0)
+            .onoff_bit(ps1.ri, 0)
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ci[ps0.c][i])
+        ;
+        if (bit_cell_aff)
+          affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
           });
       }
     }
@@ -330,62 +338,73 @@ function find_pointing_triple() {
     })
   );
   ps.forEach(p => {
-    console.log(`Candidate ${p.point_v} only in cells ${p.point_set[0].index_in_group(p.check_gr.house_name)}, ${p.point_set[1].index_in_group(p.check_gr.house_name)}, ${p.point_set[2].index_in_group(p.check_gr.house_name)} of ${p.check_gr.house_name}-${p.check_gr.nth + 1}, affect to ${p.point_gr_type}`);
+    console.log(`Candidate ${p.v} only in cells ${p.ps[0].gi[p.check_hc.house.type]}, ${p.ps[1].gi[p.check_hc.house.type]}, ${p.ps[2].gi[p.check_hc.house.type]} of ${p.check_hc.house}, affect to ${p.affect_house}`);
   });
   return ps;
 }
-function check_pt_gr_cand(ps, group) {
-  let c = group.v;
-  if (group.length == 3) {
-    let point_set = [group.cells[0], group.cells[1], group.cells[2]];
+function check_pt_gr_cand(affect_set, hc) {
+  if (hc.length == 3) {
+    let ps = [ps0, ps1, ps2] = [hc.cell_idx[0], hc.cell_idx[1], hc.cell_idx[2]];
     // same block in a row or column
-    if ((group.house_name == 'ROW' || group.house_name == 'COLUMN') && group.cells[0].b == group.cells[1].b && group.cells[1].b == group.cells[2].b) {
+    if ((hc.house.name == 'ROW' || hc.house.name == 'COLUMN') && ps0.b == ps1.b && ps1.b == ps2.b) {
       // remove c from other cell in block b
-      let point_gr = cand[c].b[group.cells[0].b].cells.filter(
-        cell => !point_set.includes(cell));
-      if (point_gr.length)
-        ps.push({
-          point_gr: point_gr
-          , point_gr_type: `BLOCK-${group.cells[0].b + 1}`
-          , point_set: point_set
-          , point_v: c
-          , check_gr: group
+      let affect_house = BOARD.house.b[ps0.b]
+        , bit_cell_aff = affect_house.c[v].bit_cell
+          .onoff_bit(ps0.bi, 0)
+          .onoff_bit(ps1.bi, 0)
+          .onoff_bit(ps2.bi, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i])
+      ;
+
+      if (bit_cell_aff)
+        affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
         });
     }
-    if (group.house_name == 'BLOCK') {
+    if (hc.house.name == 'BLOCK') {
       // same row
-      if (group.cells[0].r == group.cells[1].r && group.cells[1].r == group.cells[2].r) {
+      if (ps0.r == ps1.r && ps1.r == ps2.r) {
         // remove c from other cell in row r
-        let point_gr = cand[c].r[group.cells[0].r].cells.filter(
-          cell => !point_set.includes(cell));
-        if (point_gr.length)
-          ps.push({
-            point_gr: point_gr
-            , point_gr_type: `ROW-${group.cells[0].r + 1}`
-            , point_set: point_set
-            , point_v: c
-            , check_gr: group
-          });
+        let affect_house = BOARD.house.r[ps0.r]
+        , bit_cell_aff = affect_house.c[v].bit_cell
+          .onoff_bit(ps0.bi, 0)
+          .onoff_bit(ps1.bi, 0)
+          .onoff_bit(ps2.bi, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ri[ps0.r][i])
+      ;
+
+      if (bit_cell_aff)
+        affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
+        });
       }
       // same column
-      else if (group.cells[0].c == group.cells[1].c && group.cells[1].c == group.cells[2].c) {
+      else if (ps0.c == ps1.c && ps1.c == ps2.c) {
         // remove c from other cell in column c
-        let point_gr = cand[c].c[group.cells[0].c].cells.filter(
-          cell => !point_set.includes(cell));
-        if (point_gr.length)
-          ps.push({
-            point_gr: point_gr
-            , point_gr_type: `COLUMN-${group.cells[0].c + 1}`
-            , point_set: point_set
-            , point_v: c
-            , check_gr: group
-          });
+        let affect_house = BOARD.house.c[ps0.c]
+        , bit_cell_aff = affect_house.c[v].bit_cell
+          .onoff_bit(ps0.bi, 0)
+          .onoff_bit(ps1.bi, 0)
+          .onoff_bit(ps2.bi, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ci[ps0.c][i])
+      ;
+
+      if (bit_cell_aff)
+        affect_set.push({
+            affect_cell, affect_house, ps
+          , v: hc.v
+          , check_hc: hc
+        });
       }
     }
   }
 }
 function solve_pointing_set(ps) {
-  ps.point_gr.forEach(c => remove_candidate_from_cell(c, ps.point_v));
+  ps.affect_cell.forEach(c => remove_candidate_from_cell(c, ps.v));
 }
 //==========================================
 function solve_with_technique(ehs, ens, epp) {

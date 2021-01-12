@@ -1,61 +1,25 @@
 "use strict";
 
-let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-  , ARR19 = [ , 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  /*
-    i: index
-    type: row/col/block
-    id: 0-26 (9 + 9 + 9)
-  */
-  , cand = ARR19.map(i => new Candidate(i))
-  /*
-  cand[1..9] {
-    v: number 1..9
-    r[0..8]: array of board[][], candidate x is present in cells of row y
-    c[0..8]: array of board[][], --~~--
-    b[0..8]: array of board[][], --~~--
-    cell: array of board[][]
-  }
-  */
-  , board = []
-  /* board[r][c] {
-    dom: Dom element '.sdk-cell'
-    r,c,b,v
-    i: number index 0..80
-    clue: true/false
-    cand[1..9]: true/false
-    cand_ls: array of object cand[x]
-  }
-  */
-  , seqcell = []
-  , affect = {
-      rs: ARR08.map(() => [])
-    , cs: ARR08.map(() => [])
-    , bs: ARR08.map(() => [])
-  }
-  ;
-
 let initial_board = _ => {
-  affect.rs.forEach(s => ARR19.forEach(v => s[v] = false));
-  affect.cs.forEach(s => ARR19.forEach(v => s[v] = false));
-  affect.bs.forEach(s => ARR19.forEach(v => s[v] = false));
+  BOARD.affect.rv.forEach(s => ARR19.forEach(v => s[v] = false));
+  BOARD.affect.cv.forEach(s => ARR19.forEach(v => s[v] = false));
+  BOARD.affect.bv.forEach(s => ARR19.forEach(v => s[v] = false));
 
-  cand.forEach(c => ARR08.forEach(i => c.r[i].cells = []));
-  cand.forEach(c => ARR08.forEach(i => c.c[i].cells = []));
-  cand.forEach(c => ARR08.forEach(i => c.b[i].cells = []));
+  BOARD.house.i.forEach(h => h.c.forEach(hc => hc.bit_cell = 0));
 }
 function import_puzzle(puzzle) {
   initial_board();
   for (let i = 0; i < 81; ++i) {
     let r = ~~(i / 9)
       , c = i % 9
-      , cell = board[r][c]
+      , cell = BOARD.rc[r][c]
       , b = cell.b
       ;
     cell.v = parseInt(puzzle[i]) | 0;
+    cell.bit_cand = 0;
     cell.clue = cell.v > 0;
     //update influence
-    affect.rs[r][cell.v] = affect.cs[c][cell.v] = affect.bs[b][cell.v] = true;
+    BOARD.affect.rv[r][cell.v] = BOARD.affect.cv[c][cell.v] = BOARD.affect.bv[b][cell.v] = true;
   }
 
   fill_candidate();
@@ -64,8 +28,8 @@ function fill_candidate() {
   // go through and set candidate for each cell.
   for (let r = 0; r < 9; ++r)
     for (let c = 0; c < 9; ++c)
-      if (!board[r][c].v) {
-        add_all_candidate_into_cell(board[r][c]);
+      if (!BOARD.rc[r][c].v) {
+        add_all_candidate_into_cell(BOARD.rc[r][c]);
       }
 }
 function check_stat() {
@@ -77,7 +41,7 @@ function check_stat() {
 
   for (let r = 0; r < 9; ++r)
     for (let c = 0; c < 9; ++c) {
-      let cell = board[r][c]
+      let cell = BOARD.rc[r][c]
         , v = cell.v
         , b = cell.b;
       if (cell.v) {
@@ -99,24 +63,20 @@ function set_value_cell_update_v5(cell, v) {
   let rem_affect = cell.v ? remove_value_cell_update(cell) : [];
   // update this cell
   cell.v = v;
-  cell.cand.forEach((_, i, b) => b[i] = false); //reset to false
-  cell.cand_ls.forEach(c => {
-    if (c.v != v) remove_candidate_from_cell(cell, c.v);
-  });
-  cell.cand_ls = [];
+  cell.cand_ls.forEach(c => { if (c != v) remove_candidate_from_cell(cell, c); });
   // update affect
-  affect.rs[cell.r][v] = affect.cs[cell.c][v] = affect.bs[cell.b][v] = true;
+  BOARD.affect.rv[cell.r][v] = BOARD.affect.cv[cell.c][v] = BOARD.affect.bv[cell.b][v] = true;
 
   // find cell has candidate v, affect by cell
   let affect_set = new Set();
-  cand[v].r[cell.r].cells.forEach(c => affect_set.add(c));
-  cand[v].c[cell.c].cells.forEach(c => affect_set.add(c));
-  cand[v].b[cell.b].cells.forEach(c => affect_set.add(c));
+  BOARD.house.r[cell.r].c[v].cell_ls.forEach(i => affect_set.add(BOARD.rc[cell.r][i - 1]));
+  BOARD.house.c[cell.c].c[v].cell_ls.forEach(i => affect_set.add(BOARD.cr[cell.c][i - 1]));
+  BOARD.house.b[cell.b].c[v].cell_ls.forEach(i => affect_set.add(BOARD.bi[cell.b][i - 1]));
 
   // empty candidate v from row, colum & block of cell
-  cand[v].r[cell.r].cells = [];
-  cand[v].c[cell.c].cells = [];
-  cand[v].b[cell.b].cells = [];
+  BOARD.house.r[cell.r].c[v].bit_cell =
+  BOARD.house.c[cell.c].c[v].bit_cell =
+  BOARD.house.b[cell.b].c[v].bit_cell = 0;
 
   // remove candidate from cell in affect_set
   affect_set.forEach(c =>
@@ -133,13 +93,13 @@ function remove_value_cell_update(cell) {
   // update this cell
   let v = cell.v;
   // update affect
-  affect.rs[cell.r][v] = affect.cs[cell.c][v] = affect.bs[cell.b][v] = false;
+  BOARD.affect.rv[cell.r][v] = BOARD.affect.cv[cell.c][v] = BOARD.affect.bv[cell.b][v] = false;
 
-  // find cell has candidate v, affect by cell
+  // find cell unfilled
   let affect_set = new Set();
-  board[cell.r].forEach(c => { if (!c.v) affect_set.add(c); });
-  ARR08.forEach(i => { if (!board[i][cell.c].v) affect_set.add(board[i][cell.c]); });
-  ARR08.forEach(i => { if (!seqcell[cell.b * 9 + i].v) affect_set.add(seqcell[cell.b * 9 + i]); });
+  BOARD.rc[cell.r].forEach(c => { if (!c.v) affect_set.add(c); });
+  BOARD.cr[cell.c].forEach(c => { if (!c.v) affect_set.add(c); });
+  BOARD.bi[cell.b].forEach(c => { if (!c.v) affect_set.add(c); });
 
   // update all candidate for cell
   cell.v = 0;
@@ -150,34 +110,31 @@ function remove_value_cell_update(cell) {
   return affect_set;
 }
 function remove_candidate_from_cell(cell, v, ir = true, ic = true, ib = true) {
-  cell.cand[v] = false;
-  cell.cand_ls.remove(cand[v]);
+  cell.cand_set(v, false);
   //remove from CandHouse
-  if (ir) cand[v].r[cell.r].cells.remove(cell);
-  if (ic) cand[v].c[cell.c].cells.remove(cell);
-  if (ib) cand[v].b[cell.b].cells.remove(cell);
+  if (ir) BOARD.house.r[cell.r].c[v].cell_set(cell.c + 1, false);
+  if (ic) BOARD.house.c[cell.c].c[v].cell_set(cell.r + 1, false);
+  if (ib) BOARD.house.b[cell.b].c[v].cell_set(cell.i % 9 + 1, false);
 }
 function add_candidate_into_cell(cell, v) {
-  cell.cand[v] = !affect.rs[cell.r][v] && !affect.cs[cell.c][v] && !affect.bs[cell.b][v];
+  let is_affect = !check_affect(cell, v);
 
-  if (cell.cand[v]) {
-    cell.cand_ls.push(cand[v]);
-    cand[v].r[cell.r].cells.push(cell);
-    cand[v].c[cell.c].cells.push(cell);
-    cand[v].b[cell.b].cells.push(cell);
-  }
-  return cell.cand[v];
+  cell.cand_set(v, is_affect);
+  BOARD.house.r[cell.r].c[v].cell_set(cell.c + 1, is_affect);
+  BOARD.house.c[cell.c].c[v].cell_set(cell.r + 1, is_affect);
+  BOARD.house.b[cell.b].c[v].cell_set(cell.i % 9 + 1, is_affect);
+  return is_affect;
 }
 function add_all_candidate_into_cell(cell) {
-  cell.cand_ls = [];
+  cell.bit_cand = 0;
   ARR19.forEach(v => add_candidate_into_cell(cell, v));
 }
 function check_affect(cell, v) {
-  return affect.rs[cell.r][v] || affect.cs[cell.c][v] || affect.bs[cell.b][v];
+  return BOARD.affect.rv[cell.r][v] || BOARD.affect.cv[cell.c][v] || BOARD.affect.bv[cell.b][v];
 }
 function check_complete() {
   for (var r = 0; r < 9; ++r)
     for (var c = 0; c < 9; ++c)
-      if (!board[r][c].v) return false;
+      if (!BOARD.rc[r][c].v) return false;
   return true;
 }

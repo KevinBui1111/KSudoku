@@ -1,59 +1,86 @@
 "use strict";
 
+let ARR08 = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+  , ARR19 = [ , 1, 2, 3, 4, 5, 6, 7, 8, 9]
+;
 class SDKHelper { }
 SDKHelper.HOUSE = ['ROW', 'COLUMN', 'BLOCK'];
+SDKHelper.HOUSE_IDX = {
+    ROW: 0
+  , COLUMN: 1
+  , BLOCK: 2
+};
 
 class Cell {
   constructor(e, r, c, b, i) {
     //https://javascript.info/destructuring-assignment
     [this.dom
       , this.r, this.c, this.b, this.i
-      , this.v, this.cand, this.cand_ls] = [e, r, c, b, i, undefined, ARR19.map(c => true), []];
+      , this.clue, this.v, this.bit_cand] = [e, r, c, b, i, undefined, undefined, 0];
+    this.gi = [this.ri, this.ci, this.bi] = [this.c + 1, this.r + 1, this.i % 9 + 1];
   }
   index_in_group(g) {
-    let index = 0;
-    switch (g) {
-      case 'ROW':
-        index = this.c + 1;
-        break;
-      case 'COLUMN':
-        index = this.r + 1;
-        break;
-      case 'BLOCK':
-        index = this.i - 9 * this.b + 1;
-    }
-    return index;
+    return this.gi[SDKHelper.HOUSE_IDX[g]];
+  }
+  cand_set(v, onoff) {
+    this.bit_cand = this.bit_cand.onoff_bit(v, onoff);
+  }
+  cand_check(v) {
+    return this.bit_cand.check_bit(v);
+  }
+  get cand_ls() {
+    return get_bit_idx(this.bit_cand)
   }
   toString() {
     return `${this.r}-${this.c}`;
   }
 
 }
-class Candidate {
-  constructor(v) {
-    this.v = v;
-    this.r = ARR08.map(nth => new CandHouse(v, nth, 0));
-    this.c = ARR08.map(nth => new CandHouse(v, nth, 1));
-    this.b = ARR08.map(nth => new CandHouse(v, nth, 2));
-    this.h = []; //house by ith
-    this.h.push.apply(this.h, this.r);
-    this.h.push.apply(this.h, this.c);
-    this.h.push.apply(this.h, this.b);
+class House {
+  constructor(type, i) {
+    this.type = type;
+    this.i = i;
+    this.id = type * 9 + i;
+    this.name = `${SDKHelper.HOUSE[type]}-${i}`;
+    //array 9 CandHouse
+    this.c = ARR19.map(v => new CandHouse(v, this));
   }
-
   toString() {
-    return `Candidate ${this.v}`;
-  }
+    return this.name;
+  }  
 }
 class CandHouse {
-  constructor(v, nth, house) {
-    [this.v, this.nth, this.house, this.ith] = [v, nth, house, house * 9 + nth];
-    this.cells = []; // array of Cell
+  constructor(v, house) {
+    [this.v, this.house, this.bit_cell] = [v, house, 0];
   }
-  get length() { return this.cells.length; }
-  get house_name() { return `${SDKHelper.HOUSE[this.house]}`; }
+  cell_set(v, onoff) { this.bit_cell = this.bit_cell.onoff_bit(v, onoff); }
+  cell_check(v) { return this.bit_cell.check_bit(v); }
+
+  get cell_ls() { return get_bit_idx(this.bit_cell) }
+  get length() { return this.cell_ls.length; }
+
+  cell_idx(i) { return BOARD.hi[this.house.id][cell_ls[i] - 1]; }
 
   toString() {
-    return `${SDKHelper.HOUSE[this.house]} ${this.nth} of Candidate ${this.v}`;
+    return `${this.house.name}-${this.nth} of Candidate ${this.v}`;
+  }
+}
+
+let BOARD = {
+    rc: ARR08.map(() => [])
+  , cr: ARR08.map(() => [])
+  , bi: ARR08.map(() => [])
+  , hi: [...ARR08, ...ARR08, ...ARR08].map(_ => [])
+  , ix: []
+  , affect: {
+      rv: ARR08.map(() => [])
+    , cv: ARR08.map(() => [])
+    , bv: ARR08.map(() => [])
+  }
+  , house: new function() {
+      this.r = ARR08.map(i => new House(0, i));
+      this.c = ARR08.map(i => new House(1, i));
+      this.b = ARR08.map(i => new House(2, i));
+      this.i = [...this.r, ...this.c, ...this.b];
   }
 }

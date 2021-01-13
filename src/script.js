@@ -274,61 +274,30 @@ function find_pointing_pair() {
   return affect_set;
 }
 function check_pp_gr_cand(affect_set, hc) {
-  if (hc.length == 2) {
-    let [ps0, ps1] = [hc.cell_idx(0), hc.cell_idx(1)]
-      , ps = [ps0, ps1];
-    // same block in a row or column
-    if ((hc.house.type_name == 'ROW' || hc.house.type_name == 'COLUMN') && ps0.b == ps1.b) {
-      // remove c from other cell in block b
-      let affect_house = BOARD.house.b[ps0.b]
-        , bit_cell_aff = affect_house.c[hc.v].bit_cell
-          .onoff_bit(ps0.bi, 0)
-          .onoff_bit(ps1.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i - 1])
-        ;
+  if (hc.length != 2) return;
+  let [ps0, ps1] = [hc.cell_idx(0), hc.cell_idx(1)]
+    , type_affect = // get type of affect house
+        hc.house.type < 2 ?
+          ps0.b == ps1.b ? 2 : null :
+          ps0.r == ps1.r ? 0 :
+            ps0.c == ps1.c ? 1 : null
+    ;
+  if (type_affect === null) return;
+  
+  let affect_house = BOARD.house.i[type_affect * 9 + ps0.rcb[type_affect]]
+    , bit_cell_aff = affect_house.c[hc.v].bit_cell
+      .onoff_bit(ps0.gi[type_affect], 0) // exclude ps0
+      .onoff_bit(ps1.gi[type_affect], 0) // exclude ps1
+    , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.hi[affect_house.id][i - 1])
+    ;
 
-      if (bit_cell_aff)
-        affect_set.push({
-            affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
-        });
-    }
-    if (hc.house.type_name == 'BLOCK') {
-      // same row
-      if (ps0.r == ps1.r) {
-        // remove c from other cell in row r
-        let affect_house = BOARD.house.r[ps0.r]
-          , bit_cell_aff = affect_house.c[hc.v].bit_cell
-            .onoff_bit(ps0.ri, 0)
-            .onoff_bit(ps1.ri, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i - 1])
-          ;
-        if (bit_cell_aff)
-          affect_set.push({
-              affect_cell, affect_house, ps
-            , v: hc.v
-            , check_hc: hc
-          });
-      }
-      // same column
-      else if (ps0.c == ps1.c) {
-        // remove c from other cell in column c
-        let affect_house = BOARD.house.c[ps0.c]
-          , bit_cell_aff = affect_house.c[hc.v].bit_cell
-            .onoff_bit(ps0.ci, 0)
-            .onoff_bit(ps1.ci, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i - 1])
-          ;
-        if (bit_cell_aff)
-          affect_set.push({
-              affect_cell, affect_house, ps
-            , v: hc.v
-            , check_hc: hc
-          });
-      }
-    }
-  }
+  if (bit_cell_aff)
+    affect_set.push({
+        affect_cell, affect_house
+      , ps: [ps0, ps1]
+      , v: hc.v
+      , check_hc: hc
+    });
 }
 function find_pointing_triple() {
   let affect_set = [];
@@ -345,66 +314,31 @@ function find_pointing_triple() {
   return affect_set;
 }
 function check_pt_gr_cand(affect_set, hc) {
-  if (hc.length == 3) {
-    let [ps0, ps1, ps2] = [hc.cell_idx(0), hc.cell_idx(1), hc.cell_idx(2)]
-      , ps = [ps0, ps1, ps2];
-    // same block in a row or column
-    if ((hc.house.type_name == 'ROW' || hc.house.type_name == 'COLUMN') && ps0.b == ps1.b && ps1.b == ps2.b) {
-      // remove c from other cell in block b
-      let affect_house = BOARD.house.b[ps0.b]
-        , bit_cell_aff = affect_house.c[hc.v].bit_cell
-          .onoff_bit(ps0.bi, 0)
-          .onoff_bit(ps1.bi, 0)
-          .onoff_bit(ps2.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i - 1])
-        ;
+  if (hc.length != 3) return;
+  let [ps0, ps1, ps2] = [hc.cell_idx(0), hc.cell_idx(1), hc.cell_idx(2)]
+    , type_affect = // get type of affect house
+        hc.house.type < 2 ?
+          ps0.b == ps1.b && ps1.b == ps2.b ? 2 : null :
+          ps0.r == ps1.r && ps1.r == ps2.r ? 0 :
+            ps0.c == ps1.c && ps1.c == ps2.c ? 1 : null
+  ;
+  if (type_affect === null) return;
 
-      if (bit_cell_aff)
-        affect_set.push({
-          affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
-        });
-    }
-    if (hc.house.type_name == 'BLOCK') {
-      // same row
-      if (ps0.r == ps1.r && ps1.r == ps2.r) {
-        // remove c from other cell in row r
-        let affect_house = BOARD.house.r[ps0.r]
-          , bit_cell_aff = affect_house.c[hc.v].bit_cell
-            .onoff_bit(ps0.ri, 0)
-            .onoff_bit(ps1.ri, 0)
-            .onoff_bit(ps2.ri, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i - 1])
-          ;
+  let affect_house = BOARD.house.i[type_affect * 9 + ps0.rcb[type_affect]]
+    , bit_cell_aff = affect_house.c[hc.v].bit_cell
+      .onoff_bit(ps0.gi[type_affect], 0) // exclude ps0
+      .onoff_bit(ps1.gi[type_affect], 0) // exclude ps1
+      .onoff_bit(ps2.gi[type_affect], 0) // exclude ps2
+    , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.hi[affect_house.id][i - 1])
+    ;
 
-        if (bit_cell_aff)
-          affect_set.push({
-            affect_cell, affect_house, ps
-            , v: hc.v
-            , check_hc: hc
-          });
-      }
-      // same column
-      else if (ps0.c == ps1.c && ps1.c == ps2.c) {
-        // remove c from other cell in column c
-        let affect_house = BOARD.house.c[ps0.c]
-          , bit_cell_aff = affect_house.c[hc.v].bit_cell
-            .onoff_bit(ps0.ci, 0)
-            .onoff_bit(ps1.ci, 0)
-            .onoff_bit(ps2.ci, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i - 1])
-          ;
-
-        if (bit_cell_aff)
-          affect_set.push({
-              affect_cell, affect_house, ps
-            , v: hc.v
-            , check_hc: hc
-          });
-      }
-    }
-  }
+  if (bit_cell_aff)
+    affect_set.push({
+        affect_cell, affect_house
+      , ps: [ps0, ps1, ps2]
+      , v: hc.v
+      , check_hc: hc
+    });
 }
 function solve_pointing_set(ps) {
   ps.affect_cell.forEach(c => remove_candidate_from_cell(c, ps.v));

@@ -18,6 +18,7 @@ class Cell {
       , this.r, this.c, this.b, this.i
       , this.clue, this.v, this.bit_cand] = [e, r, c, b, i, undefined, undefined, 0];
     this.gi = [this.ri, this.ci, this.bi] = [this.c + 1, this.r + 1, this.i % 9 + 1];
+    this.rcb = [this.r, this.c, this.b];
   }
   index_in_group(g) {
     return this.gi[SDKHelper.HOUSE_IDX[g]];

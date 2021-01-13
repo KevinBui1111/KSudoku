@@ -11,7 +11,7 @@ $(document).ready(function () {
       , b = ~~(i / 9)
       , c = ~~(b % 3) * 3 + i % 3;
     e.cell
-      = BOARD.rc[r][c] = BOARD.cr[c][r] = BOARD.bi[b][i % 9]= BOARD.ix[i]
+      = BOARD.rc[r][c] = BOARD.cr[c][r] = BOARD.bi[b][i % 9] = BOARD.ix[i]
       = BOARD.hi[r][c] = BOARD.hi[c + 9][r] = BOARD.hi[b + 18][i % 9]
       = new Cell(e, r, c, b, i);
   });
@@ -127,7 +127,7 @@ let ui_set_cand_cell = (e, v) => {
     , valid = add_candidate_into_cell(e.cell, v)
     , _0 = ui_update_cell([e.cell, ...rem_affect])
     , _1 = show_cell_candidate(e, v, valid) // force
-  ;
+    ;
 }
 function show_cell_candidate(e, v, show) {
   if (!show_ui_mode) return;
@@ -162,9 +162,8 @@ function ui_fill_candidate() {
   BOARD.ix
     .filter(c => !c.v)
     .forEach(cell =>
-      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand_check(c) && chk_onoff_cand.checked)
-    )
-  );
+      ARR19.forEach(c => show_cell_candidate(cell.dom, c, cell.cand_check(c) && chk_onoff_cand.checked))
+    );
 }
 function ui_update_cell(cells) {
   cells.forEach(cell => {
@@ -239,23 +238,24 @@ function find_naked_single_one() {
 }
 
 function find_hidden_single_all_naive() {
-  let affect_set = new Set();
+  let affect_map = new Map();
 
   ARR19.forEach(v =>
     ARR08.forEach(i => {
-      group_check_add_hs(affect_set, BOARD.house.b[i].c[v]);
-      group_check_add_hs(affect_set, BOARD.house.r[i].c[v]);
-      group_check_add_hs(affect_set, BOARD.house.c[i].c[v]);
+      group_check_add_hs(affect_map, BOARD.house.b[i].c[v]);
+      group_check_add_hs(affect_map, BOARD.house.r[i].c[v]);
+      group_check_add_hs(affect_map, BOARD.house.c[i].c[v]);
     })
   );
 
   // return only non empty;
-  return affect_set.filter(n => n);
+  return [...affect_map.values()];
 }
-function group_check_add_hs(affect_set, hc) {
+function group_check_add_hs(affect_map, hc) {
   if (hc.length == 1) {
-    let found = affect_set.get(hc.cell_idx(0)) || { cell: hc.cell_idx(0), v: hc.v, group: [] };
+    let found = affect_map.get(hc.cell_idx(0)) || { cell: hc.cell_idx(0), v: hc.v, group: [] };
     found.group.push(hc.house.name);
+    affect_map.set(hc.cell_idx(0), found);
   }
 }
 //==================== Lock Candidate / Intersection ======================
@@ -284,8 +284,8 @@ function check_pp_gr_cand(affect_set, hc) {
         , bit_cell_aff = affect_house.c[hc.v].bit_cell
           .onoff_bit(ps0.bi, 0)
           .onoff_bit(ps1.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i-1])
-      ;
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i - 1])
+        ;
 
       if (bit_cell_aff)
         affect_set.push({
@@ -302,13 +302,13 @@ function check_pp_gr_cand(affect_set, hc) {
           , bit_cell_aff = affect_house.c[hc.v].bit_cell
             .onoff_bit(ps0.ri, 0)
             .onoff_bit(ps1.ri, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i-1])
-        ;
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i - 1])
+          ;
         if (bit_cell_aff)
           affect_set.push({
-            affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
+              affect_cell, affect_house, ps
+            , v: hc.v
+            , check_hc: hc
           });
       }
       // same column
@@ -318,13 +318,13 @@ function check_pp_gr_cand(affect_set, hc) {
           , bit_cell_aff = affect_house.c[hc.v].bit_cell
             .onoff_bit(ps0.ci, 0)
             .onoff_bit(ps1.ci, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i-1])
-        ;
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i - 1])
+          ;
         if (bit_cell_aff)
           affect_set.push({
-            affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
+              affect_cell, affect_house, ps
+            , v: hc.v
+            , check_hc: hc
           });
       }
     }
@@ -356,12 +356,12 @@ function check_pt_gr_cand(affect_set, hc) {
           .onoff_bit(ps0.bi, 0)
           .onoff_bit(ps1.bi, 0)
           .onoff_bit(ps2.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i-1])
-      ;
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i - 1])
+        ;
 
       if (bit_cell_aff)
         affect_set.push({
-            affect_cell, affect_house, ps
+          affect_cell, affect_house, ps
           , v: hc.v
           , check_hc: hc
         });
@@ -371,16 +371,16 @@ function check_pt_gr_cand(affect_set, hc) {
       if (ps0.r == ps1.r && ps1.r == ps2.r) {
         // remove c from other cell in row r
         let affect_house = BOARD.house.r[ps0.r]
-        , bit_cell_aff = affect_house.c[hc.v].bit_cell
-          .onoff_bit(ps0.ri, 0)
-          .onoff_bit(ps1.ri, 0)
-          .onoff_bit(ps2.ri, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i-1])
-        ;
+          , bit_cell_aff = affect_house.c[hc.v].bit_cell
+            .onoff_bit(ps0.ri, 0)
+            .onoff_bit(ps1.ri, 0)
+            .onoff_bit(ps2.ri, 0)
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i - 1])
+          ;
 
         if (bit_cell_aff)
           affect_set.push({
-              affect_cell, affect_house, ps
+            affect_cell, affect_house, ps
             , v: hc.v
             , check_hc: hc
           });
@@ -389,12 +389,12 @@ function check_pt_gr_cand(affect_set, hc) {
       else if (ps0.c == ps1.c && ps1.c == ps2.c) {
         // remove c from other cell in column c
         let affect_house = BOARD.house.c[ps0.c]
-        , bit_cell_aff = affect_house.c[hc.v].bit_cell
-          .onoff_bit(ps0.ci, 0)
-          .onoff_bit(ps1.ci, 0)
-          .onoff_bit(ps2.ci, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i-1])
-        ;
+          , bit_cell_aff = affect_house.c[hc.v].bit_cell
+            .onoff_bit(ps0.ci, 0)
+            .onoff_bit(ps1.ci, 0)
+            .onoff_bit(ps2.ci, 0)
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i - 1])
+          ;
 
         if (bit_cell_aff)
           affect_set.push({

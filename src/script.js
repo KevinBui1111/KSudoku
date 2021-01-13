@@ -22,6 +22,7 @@ $(document).ready(function () {
   chk_auto_cand = document.getElementById('chk-auto-cand');
 
   document.querySelector("#chk-show-ui").click();
+  document.querySelector("#chk-auto-cand").click();
 
   $(".sdk-cell").click(function () {
     //$(".sdk-cell").removeClass("selected");
@@ -253,14 +254,14 @@ function find_hidden_single_all_naive() {
 }
 function group_check_add_hs(affect_set, hc) {
   if (hc.length == 1) {
-    let found = affect_set.get(hc.cell_idx[0]) || { cell: hc.cell_idx[0], v: hc.v, group: [] };
+    let found = affect_set.get(hc.cell_idx(0)) || { cell: hc.cell_idx(0), v: hc.v, group: [] };
     found.group.push(hc.house.name);
   }
 }
 //==================== Lock Candidate / Intersection ======================
 function find_pointing_pair() {
   let affect_set = [];
-  ARR19.forEach(c =>
+  ARR19.forEach(v =>
     ARR08.forEach(i => {
       check_pp_gr_cand(affect_set, BOARD.house.b[i].c[v]);
       check_pp_gr_cand(affect_set, BOARD.house.r[i].c[v]);
@@ -274,15 +275,16 @@ function find_pointing_pair() {
 }
 function check_pp_gr_cand(affect_set, hc) {
   if (hc.length == 2) {
-    let ps = [ps0, ps1] = [hc.cell_idx[0], hc.cell_idx[1]];
+    let [ps0, ps1] = [hc.cell_idx(0), hc.cell_idx(1)]
+      , ps = [ps0, ps1];
     // same block in a row or column
-    if ((hc.house.name == 'ROW' || hc.house.name == 'COLUMN') && ps0.b == ps1.b) {
+    if ((hc.house.type_name == 'ROW' || hc.house.type_name == 'COLUMN') && ps0.b == ps1.b) {
       // remove c from other cell in block b
       let affect_house = BOARD.house.b[ps0.b]
-        , bit_cell_aff = affect_house.c[v].bit_cell
+        , bit_cell_aff = affect_house.c[hc.v].bit_cell
           .onoff_bit(ps0.bi, 0)
           .onoff_bit(ps1.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i])
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i-1])
       ;
 
       if (bit_cell_aff)
@@ -292,15 +294,15 @@ function check_pp_gr_cand(affect_set, hc) {
           , check_hc: hc
         });
     }
-    if (hc.house.name == 'BLOCK') {
+    if (hc.house.type_name == 'BLOCK') {
       // same row
       if (ps0.r == ps1.r) {
         // remove c from other cell in row r
         let affect_house = BOARD.house.r[ps0.r]
-          , bit_cell_aff = affect_house.c[v].bit_cell
+          , bit_cell_aff = affect_house.c[hc.v].bit_cell
             .onoff_bit(ps0.ri, 0)
             .onoff_bit(ps1.ri, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ri[ps0.r][i])
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i-1])
         ;
         if (bit_cell_aff)
           affect_set.push({
@@ -313,10 +315,10 @@ function check_pp_gr_cand(affect_set, hc) {
       else if (ps0.c == ps1.c) {
         // remove c from other cell in column c
         let affect_house = BOARD.house.c[ps0.c]
-          , bit_cell_aff = affect_house.c[v].bit_cell
-            .onoff_bit(ps0.ri, 0)
-            .onoff_bit(ps1.ri, 0)
-          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ci[ps0.c][i])
+          , bit_cell_aff = affect_house.c[hc.v].bit_cell
+            .onoff_bit(ps0.ci, 0)
+            .onoff_bit(ps1.ci, 0)
+          , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i-1])
         ;
         if (bit_cell_aff)
           affect_set.push({
@@ -329,31 +331,32 @@ function check_pp_gr_cand(affect_set, hc) {
   }
 }
 function find_pointing_triple() {
-  let ps = [];
-  ARR19.forEach(c =>
+  let affect_set = [];
+  ARR19.forEach(v =>
     ARR08.forEach(i => {
-      check_pt_gr_cand(ps, cand[c].b[i]);
-      check_pt_gr_cand(ps, cand[c].r[i]);
-      check_pt_gr_cand(ps, cand[c].c[i]);
+      check_pt_gr_cand(affect_set, BOARD.house.b[i].c[v]);
+      check_pt_gr_cand(affect_set, BOARD.house.r[i].c[v]);
+      check_pt_gr_cand(affect_set, BOARD.house.c[i].c[v]);
     })
   );
-  ps.forEach(p => {
+  affect_set.forEach(p => {
     console.log(`Candidate ${p.v} only in cells ${p.ps[0].gi[p.check_hc.house.type]}, ${p.ps[1].gi[p.check_hc.house.type]}, ${p.ps[2].gi[p.check_hc.house.type]} of ${p.check_hc.house}, affect to ${p.affect_house}`);
   });
-  return ps;
+  return affect_set;
 }
 function check_pt_gr_cand(affect_set, hc) {
   if (hc.length == 3) {
-    let ps = [ps0, ps1, ps2] = [hc.cell_idx[0], hc.cell_idx[1], hc.cell_idx[2]];
+    let [ps0, ps1, ps2] = [hc.cell_idx(0), hc.cell_idx(1), hc.cell_idx(2)]
+      , ps = [ps0, ps1, ps2];
     // same block in a row or column
-    if ((hc.house.name == 'ROW' || hc.house.name == 'COLUMN') && ps0.b == ps1.b && ps1.b == ps2.b) {
+    if ((hc.house.type_name == 'ROW' || hc.house.type_name == 'COLUMN') && ps0.b == ps1.b && ps1.b == ps2.b) {
       // remove c from other cell in block b
       let affect_house = BOARD.house.b[ps0.b]
-        , bit_cell_aff = affect_house.c[v].bit_cell
+        , bit_cell_aff = affect_house.c[hc.v].bit_cell
           .onoff_bit(ps0.bi, 0)
           .onoff_bit(ps1.bi, 0)
           .onoff_bit(ps2.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i])
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.bi[ps0.b][i-1])
       ;
 
       if (bit_cell_aff)
@@ -363,52 +366,54 @@ function check_pt_gr_cand(affect_set, hc) {
           , check_hc: hc
         });
     }
-    if (hc.house.name == 'BLOCK') {
+    if (hc.house.type_name == 'BLOCK') {
       // same row
       if (ps0.r == ps1.r && ps1.r == ps2.r) {
         // remove c from other cell in row r
         let affect_house = BOARD.house.r[ps0.r]
-        , bit_cell_aff = affect_house.c[v].bit_cell
-          .onoff_bit(ps0.bi, 0)
-          .onoff_bit(ps1.bi, 0)
-          .onoff_bit(ps2.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ri[ps0.r][i])
-      ;
+        , bit_cell_aff = affect_house.c[hc.v].bit_cell
+          .onoff_bit(ps0.ri, 0)
+          .onoff_bit(ps1.ri, 0)
+          .onoff_bit(ps2.ri, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.rc[ps0.r][i-1])
+        ;
 
-      if (bit_cell_aff)
-        affect_set.push({
-            affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
-        });
+        if (bit_cell_aff)
+          affect_set.push({
+              affect_cell, affect_house, ps
+            , v: hc.v
+            , check_hc: hc
+          });
       }
       // same column
       else if (ps0.c == ps1.c && ps1.c == ps2.c) {
         // remove c from other cell in column c
         let affect_house = BOARD.house.c[ps0.c]
-        , bit_cell_aff = affect_house.c[v].bit_cell
-          .onoff_bit(ps0.bi, 0)
-          .onoff_bit(ps1.bi, 0)
-          .onoff_bit(ps2.bi, 0)
-        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.ci[ps0.c][i])
-      ;
+        , bit_cell_aff = affect_house.c[hc.v].bit_cell
+          .onoff_bit(ps0.ci, 0)
+          .onoff_bit(ps1.ci, 0)
+          .onoff_bit(ps2.ci, 0)
+        , affect_cell = get_bit_idx(bit_cell_aff).map(i => BOARD.cr[ps0.c][i-1])
+        ;
 
-      if (bit_cell_aff)
-        affect_set.push({
-            affect_cell, affect_house, ps
-          , v: hc.v
-          , check_hc: hc
-        });
+        if (bit_cell_aff)
+          affect_set.push({
+              affect_cell, affect_house, ps
+            , v: hc.v
+            , check_hc: hc
+          });
       }
     }
   }
 }
 function solve_pointing_set(ps) {
   ps.affect_cell.forEach(c => remove_candidate_from_cell(c, ps.v));
+  return ps.affect_cell;
 }
 //==========================================
-function solve_with_technique(ehs, ens, epp) {
-  let found = true;
+function solve_with_technique(ehs, ens, epp, ept) {
+  let found = true
+    , affect_cell = new Set();
   while (found) {
     found = false;
     // console.log('--------');
@@ -418,14 +423,21 @@ function solve_with_technique(ehs, ens, epp) {
     if (!solved_ls.length && ens)
       solved_ls = find_naked_single_one();
 
-    solved_ls.forEach(h => set_value_cell_update_v5(h.cell, h.v));
+    solved_ls.forEach(h => set_value_cell_update_v5(h.cell, h.v).add_to_set(affect_cell));
 
     if (!solved_ls.length && epp) {
       solved_ls = find_pointing_pair();
-      solved_ls.forEach(ps => solve_pointing_set(ps));
+      solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
     }
+
+    if (!solved_ls.length && ept) {
+      solved_ls = find_pointing_triple();
+      solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
+    }
+
     found = solved_ls.length;
   }
+  return affect_cell;
 }
 //==========================================
 String.prototype.format = function () {

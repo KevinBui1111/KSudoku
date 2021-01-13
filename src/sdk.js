@@ -26,7 +26,7 @@ class Cell {
     this.bit_cand = this.bit_cand.onoff_bit(v, onoff);
   }
   cand_check(v) {
-    return this.bit_cand.check_bit(v);
+    return !!this.bit_cand.check_bit(v);
   }
   get cand_ls() {
     return get_bit_idx(this.bit_cand)
@@ -39,9 +39,10 @@ class Cell {
 class House {
   constructor(type, i) {
     this.type = type;
+    this.type_name = SDKHelper.HOUSE[type];
     this.i = i;
     this.id = type * 9 + i;
-    this.name = `${SDKHelper.HOUSE[type]}-${i}`;
+    this.name = `${this.type_name}-${i+1}`;
     //array 9 CandHouse
     this.c = ARR19.map(v => new CandHouse(v, this));
   }
@@ -59,7 +60,7 @@ class CandHouse {
   get cell_ls() { return get_bit_idx(this.bit_cell) }
   get length() { return this.cell_ls.length; }
 
-  cell_idx(i) { return BOARD.hi[this.house.id][cell_ls[i] - 1]; }
+  cell_idx(i) { return BOARD.hi[this.house.id][this.cell_ls[i] - 1]; }
 
   toString() {
     return `${this.house.name}-${this.nth} of Candidate ${this.v}`;

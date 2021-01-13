@@ -533,3 +533,12 @@ Number.prototype.onoff_bit = function(i, onoff) {
     this | 1 << i - 1 : // on
     this & ~(1 << i - 1); // off
 };
+
+Array.prototype.add_to_set = function(s) {
+  this.forEach(s.add, s);
+  return s;
+}
+Set.prototype.add_to_set = function(s) {
+  this.forEach(s.add, s);
+  return s;
+}

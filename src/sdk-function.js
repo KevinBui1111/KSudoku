@@ -110,6 +110,12 @@ function remove_value_cell_update(cell) {
   return affect_set;
 }
 function remove_candidate_from_cell(cell, v, ir = true, ic = true, ib = true) {
+  if (Array.isArray(v)) 
+  {
+    v.forEach(c => remove_candidate_from_cell(cell, c, ir, ic, ib));
+    return;
+  }
+
   cell.cand_set(v, false);
   //remove from CandHouse
   if (ir) BOARD.house.r[cell.r].c[v].cell_set(cell.c + 1, false);

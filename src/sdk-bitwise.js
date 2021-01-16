@@ -533,10 +533,16 @@ Number.prototype.onoff_bit = function(i, onoff) {
     this | 1 << i - 1 : // on
     this & ~(1 << i - 1); // off
 };
-
+Number.prototype.any_bit = function(a) {
+  for(let i of a) if (this.check_bit(i)) return true;
+  return false;
+}
 Array.prototype.add_to_set = function(s) {
   this.forEach(s.add, s);
   return s;
+};
+Array.prototype.push_array = function(a) {
+  this.push.apply(this, a);
 }
 Set.prototype.add_to_set = function(s) {
   this.forEach(s.add, s);

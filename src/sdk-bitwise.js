@@ -1,3 +1,5 @@
+"use strict";
+
 let MAP_BIT_SIG = [
     [] // 0
   , [1] // 1

@@ -1,3 +1,11 @@
+"use strict";
+
+function find_naked_single_one() {
+  return BOARD.ix
+    .filter(c => !c.v && c.cand_ls.length == 1)
+    .map(c => ({ cell: c, v: c.cand_ls[0] }));
+}
+
 let find_naked_pair = (cnt) => {
   let affect_set = [];
 

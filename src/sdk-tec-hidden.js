@@ -1,3 +1,27 @@
+"use strict";
+
+function find_hidden_single_all_naive() {
+  let affect_map = new Map();
+
+  ARR19.forEach(v =>
+    ARR08.forEach(i => {
+      group_check_add_hs(affect_map, BOARD.house.b[i].c[v]);
+      group_check_add_hs(affect_map, BOARD.house.r[i].c[v]);
+      group_check_add_hs(affect_map, BOARD.house.c[i].c[v]);
+    })
+  );
+
+  // return only non empty;
+  return [...affect_map.values()];
+}
+function group_check_add_hs(affect_map, hc) {
+  if (hc.length == 1) {
+    let found = affect_map.get(hc.cell_idx(0)) || { cell: hc.cell_idx(0), v: hc.v, group: [] };
+    found.group.push(hc.house.name);
+    affect_map.set(hc.cell_idx(0), found);
+  }
+}
+
 let find_hidden_pair = (cnt) => {
   let affect_set = [];
 

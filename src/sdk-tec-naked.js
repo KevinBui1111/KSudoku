@@ -43,12 +43,10 @@ let find_naked_triple_ext = (cnt) => {
   let affect_set = [];
 
   BOARD.hi.forEach((ha, i) => {
-    let unclue_ls = []
-      , unclue_bit = 0
-      , result_group = []
+    let unclue_bit = 0
       , house = BOARD.house.i[i]
       ;
-    result_group = ha
+    ha
        // check cell up to 3 cands
       .filter((c, ci) => {
         if (c.bit_cand) unclue_bit = unclue_bit.onoff_bit(ci + 1, true);

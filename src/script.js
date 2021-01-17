@@ -345,7 +345,7 @@ function solve_pointing_set(ps) {
   return ps.affect_cell;
 }
 //==========================================
-function solve_with_technique(ehs, ens, epp, ept, np, nt) {
+function solve_with_technique(ehs, ens, epp, ept, np, nt, hp, ht) {
   let found = true
     , affect_cell = new Set();
   while (found) {
@@ -376,6 +376,16 @@ function solve_with_technique(ehs, ens, epp, ept, np, nt) {
 
     if (!solved_ls.length && nt) {
       solved_ls = find_naked_triple_ext();
+      solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
+    }
+
+    if (!solved_ls.length && hp) {
+      solved_ls = find_hidden_pair(2);
+      solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
+    }
+
+    if (!solved_ls.length && ht) {
+      solved_ls = find_hidden_triple_ext();
       solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
     }
 

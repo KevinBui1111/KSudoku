@@ -69,9 +69,9 @@ function set_value_cell_update_v5(cell, v) {
 
   // find cell has candidate v, affect by cell
   let affect_set = new Set();
-  BOARD.house.r[cell.r].c[v].cell_ls.forEach(i => affect_set.add(BOARD.rc[cell.r][i - 1]));
-  BOARD.house.c[cell.c].c[v].cell_ls.forEach(i => affect_set.add(BOARD.cr[cell.c][i - 1]));
-  BOARD.house.b[cell.b].c[v].cell_ls.forEach(i => affect_set.add(BOARD.bi[cell.b][i - 1]));
+  BOARD.house.r[cell.r].c[v].cell_ls.add_to_set(affect_set);
+  BOARD.house.c[cell.c].c[v].cell_ls.add_to_set(affect_set);
+  BOARD.house.b[cell.b].c[v].cell_ls.add_to_set(affect_set);
 
   // empty candidate v from row, colum & block of cell
   BOARD.house.r[cell.r].c[v].bit_cell =

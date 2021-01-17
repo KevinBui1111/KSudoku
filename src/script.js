@@ -275,7 +275,7 @@ function find_pointing_pair() {
 }
 function check_pp_gr_cand(affect_set, hc) {
   if (hc.length != 2) return;
-  let [ps0, ps1] = [hc.cell_idx(0), hc.cell_idx(1)]
+  let [ps0, ps1] = hc.cell_ls
     , type_affect = // get type of affect house
         hc.house.type < 2 ?
           ps0.b == ps1.b ? 2 : null :
@@ -315,7 +315,7 @@ function find_pointing_triple() {
 }
 function check_pt_gr_cand(affect_set, hc) {
   if (hc.length != 3) return;
-  let [ps0, ps1, ps2] = [hc.cell_idx(0), hc.cell_idx(1), hc.cell_idx(2)]
+  let [ps0, ps1, ps2] = hc.cell_ls
     , type_affect = // get type of affect house
         hc.house.type < 2 ?
           ps0.b == ps1.b && ps1.b == ps2.b ? 2 : null :
@@ -350,7 +350,7 @@ function solve_with_technique(ehs, ens, epp, ept, np, nt) {
     , affect_cell = new Set();
   while (found) {
     found = false;
-    // console.log('--------');
+    console.log('--------');
     let solved_ls = [];
     if (ehs)
       solved_ls = find_hidden_single_all_naive();
@@ -375,11 +375,14 @@ function solve_with_technique(ehs, ens, epp, ept, np, nt) {
     }
 
     if (!solved_ls.length && nt) {
-      solved_ls = find_naked_pair(3);
+      solved_ls = find_naked_triple_ext();
       solved_ls.forEach(ps => solve_pointing_set(ps).add_to_set(affect_cell));
     }
 
     found = solved_ls.length;
+
+    ui_update_cell(affect_cell);
+    debugger;
   }
   return affect_cell;
 }

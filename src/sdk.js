@@ -58,8 +58,9 @@ class CandHouse {
   cell_set(v, onoff) { this.bit_cell = this.bit_cell.onoff_bit(v, onoff); }
   cell_check(v) { return this.bit_cell.check_bit(v); }
 
-  get cell_ls() { return get_bit_idx(this.bit_cell) }
-  get length() { return this.cell_ls.length; }
+  get cell_idx_ls() { return get_bit_idx(this.bit_cell); }
+  get cell_ls() { return this.cell_idx_ls.map(i => BOARD.hi[this.house.id][i - 1]); }
+  get length() { return this.cell_idx_ls.length; }
 
   cell_idx(i) { return BOARD.hi[this.house.id][this.cell_ls[i] - 1]; }
 

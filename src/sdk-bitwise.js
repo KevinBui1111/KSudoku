@@ -543,8 +543,18 @@ Array.prototype.add_to_set = function(s) {
 };
 Array.prototype.push_array = function(a) {
   this.push.apply(this, a);
-}
+};
 Set.prototype.add_to_set = function(s) {
   this.forEach(s.add, s);
   return s;
+};
+Array.prototype.combine = function(n) {
+  return n === 0 ?
+    [[]] :
+    this.flatMap((e, i) =>
+      this.slice(i + 1).combine(n - 1).map(c => [e,...c])
+    );
+};
+Array.prototype.OR = function() {
+  return this.reduce((i, cv) => i | cv);
 }

@@ -269,7 +269,7 @@ function solve_with_technique(ehs, ens, epp, ept, np, nt, hp, ht) {
     found = solved_ls.length;
 
     ui_update_cell(affect_cell);
-    debugger;
+    //debugger;
   }
   return affect_cell;
 }

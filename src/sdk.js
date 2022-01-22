@@ -62,7 +62,7 @@ class CandHouse {
   get cell_ls() { return this.cell_idx_ls.map(i => BOARD.hi[this.house.id][i - 1]); }
   get length() { return this.cell_idx_ls.length; }
 
-  cell_idx(i) { return BOARD.hi[this.house.id][this.cell_ls[i] - 1]; }
+  cell_idx(i) { return BOARD.hi[this.house.id][this.cell_idx_ls[i] - 1]; }
 
   toString() {
     return `${this.house.name}-${this.nth} of Candidate ${this.v}`;

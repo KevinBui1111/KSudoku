@@ -17,15 +17,15 @@ function FindPrimeNumber(n) {
     ;
 
     for (let b of prime_list) {
-      if (b > sqrt)
+      if (b > sqrt) {
+        prime_list.push(number);
         break;
+      }
       else if (number % b === 0) {
         success = 0;
         break;
       }
     }
-
-    if (success) prime_list.push(number);
   }
 
   return prime_list.at(-1);

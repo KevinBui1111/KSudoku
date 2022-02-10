@@ -1,5 +1,10 @@
 "use strict";
 
+/*
+console.time('Prime');
+console.info(FindPrimeNumber(2e6).toLocaleString());
+console.timeEnd('Prime');
+ */
 function FindPrimeNumber(n) {
   let prime_list = [2]
     , number = 1

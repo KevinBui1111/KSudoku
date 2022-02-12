@@ -79,7 +79,7 @@ function print_board(board) {
 function build_board(puz) {
   let arr = [...puz].map(c => Number(c) | 0)
   const newArr = [];
-  while(arr.length) newArr.push(arr.splice(0,9));
+  while (arr.length) newArr.push(arr.splice(0, 9));
   return newArr;
 }
 

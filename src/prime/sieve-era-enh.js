@@ -5,7 +5,7 @@ let sieve_part = []
 let MAX = 1e6;
 
 function init_space_enh(size) {
-  console.time('init_space');
+  // console.time('init_space');
 
   // Array.fill(true); is very slow and consume huge memory
   for (let i = 0; i < size; ++i) sieve_part[i] = true;
@@ -13,7 +13,7 @@ function init_space_enh(size) {
   // fastest way initial sequence array
   for (let i = 0; i < size; ++i) spd_part[i] = 0;
 
-  console.timeEnd('init_space');
+  // console.timeEnd('init_space');
 }
 
 function sieve_era_part(primes, from, N) {
@@ -29,16 +29,16 @@ function sieve_era_part(primes, from, N) {
   for (let i = 0; primes[i] <= limit; ++i) {
     let p = primes[i];
 
-    let cross = [];
+    // let cross = [];
     let inc = p > 2 ? 2 : 1;
     let mul = Math.ceil(from / p);
     if (p > 2 && (mul & 1) === 0) ++mul; // odd, not even
     if (mul < p) mul = p;
     for (; mul * p <= N; mul += inc) {
       sieve_part[mul * p - from] = false;
-      cross.push(mul * p);
+      // cross.push(mul * p);
     }
-    console.info(`cross ${p}: ${cross}`);
+    // console.info(`cross ${p}: ${cross}`);
   }
 
   let new_primes = [], j = -1;
@@ -73,35 +73,19 @@ function Sieve22Max() {
 }
 
 function nth_prime(n) {
-  init_space_enh(MAX + 1);
-
+  // init_space_enh(MAX + 1);
   // find prime up to MAX
+  let max = MAX;
+  let primes = Sieve22Max();
 
-  let limit = Math.ceil(Math.sqrt(N));
-  if (primes.at(-1) < limit) {
-    console.error(`Not enough base primes to find up to ${N}`);
-    return;
+  while(primes.length < n) {
+    // sieve for next segment
+    let new_primes = sieve_era_part(primes, max + 1, max + MAX);
+    max += MAX;
+
+    // extend primes
+    primes.push.apply(primes, new_primes);
   }
 
-  for (let i = 0; primes[i] <= limit; ++i) {
-    let p = primes[i];
-
-    let cross = [];
-    let inc = p > 2 ? 2 : 1;
-    let mul = Math.ceil(from / p);
-    if (p > 2 && (mul & 1) === 0) ++mul; // odd, not even
-    if (mul < p) mul = p;
-    for (; mul * p <= N; mul += inc) {
-      sieve_part[mul * p - from] = false;
-      cross.push(mul * p);
-    }
-    console.info(`cross ${p}: ${cross}`);
-  }
-
-  let new_primes = [], j = -1;
-  for (let i = Math.max(from, 2); i <= N; ++i)
-    if (sieve_part[i - from])
-      new_primes[++j] = i;
-
-  return new_primes;
+  return primes[n - 1];
 }

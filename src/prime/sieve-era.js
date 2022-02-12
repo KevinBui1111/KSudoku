@@ -26,8 +26,9 @@ function SieveEratosthenes(n) {
       prime.push(i);
 
       // let cross = [];
-      for (let mul = i; mul * i <= MAX; ++mul) {
-        // ++ops;
+      let inc = i > 2 ? 2 : 1;
+      for (let mul = i; mul * i <= MAX; mul += inc) {
+        ++ops;
         if (slf[mul] >= i) {
           sieve[mul * i] = false;
           slf[mul * i] = i;

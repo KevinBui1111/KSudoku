@@ -18,10 +18,10 @@ function init_space_enh(size) {
 
 function sieve_era_part(primes, from, N) {
   // assume primes is the list of prime number from 2 to 'from' param
-  init_space_enh(N - from + 1);
+  init_space_enh(N - from);
 
-  let limit = Math.ceil(Math.sqrt(N));
-  if (primes.at(-1) < limit) {
+  let limit = ~~Math.sqrt(N);
+  if (primes.at(-1) <= limit - 2) {
     console.error(`Not enough base primes to find up to ${N}`);
     return;
   }
@@ -34,7 +34,7 @@ function sieve_era_part(primes, from, N) {
     let mul = Math.ceil(from / p);
     if (p > 2 && (mul & 1) === 0) ++mul; // odd, not even
     if (mul < p) mul = p;
-    for (; mul * p <= N; mul += inc) {
+    for (; mul * p < N; mul += inc) {
       sieve_part[mul * p - from] = false;
       // cross.push(mul * p);
     }
@@ -42,7 +42,7 @@ function sieve_era_part(primes, from, N) {
   }
 
   let new_primes = [], j = -1;
-  for (let i = Math.max(from, 2); i <= N; ++i)
+  for (let i = Math.max(from, 2); i < N; ++i)
     if (sieve_part[i - from])
       new_primes[++j] = i;
 
@@ -51,18 +51,18 @@ function sieve_era_part(primes, from, N) {
 
 function Sieve22Max() {
   // default all prime
-  init_space_enh(MAX + 1);
+  init_space_enh(MAX);
 
   let prime = [];
 
-  for (let i = 2; i <= MAX; ++i) {
+  for (let i = 2; i < MAX; ++i) {
     if (sieve_part[i]) {
       prime.push(i);
       spd_part[i] = i;
     }
 
     for (let p of prime) {
-      if (p > spd_part[i] || p * i > MAX) break;
+      if (p > spd_part[i] || p * i >= MAX) break;
 
       sieve_part[p * i] = false;
       spd_part[p * i] = p;
@@ -80,7 +80,7 @@ function nth_prime(n) {
 
   while(primes.length < n) {
     // sieve for next segment
-    let new_primes = sieve_era_part(primes, max + 1, max + MAX);
+    let new_primes = sieve_era_part(primes, max, max + MAX);
     max += MAX;
 
     // extend primes

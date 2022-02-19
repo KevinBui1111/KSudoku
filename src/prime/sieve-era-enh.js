@@ -2,7 +2,6 @@
 
 let sieve_part = []
   , spd_part = []; // smallest prime divisor
-let MAX = 1e6;
 
 function init_space_enh(size) {
   // console.time('init_space');
@@ -18,7 +17,7 @@ function init_space_enh(size) {
 
 function sieve_era_part(primes, from, N) {
   // assume primes is the list of prime number from 2 to 'from' param
-  init_space_enh(N - from);
+  for (let i = 0; i < N - from; ++i) sieve_part[i] = true;
 
   let limit = ~~Math.sqrt(N);
   if (primes.at(-1) <= limit - 2) {
@@ -49,20 +48,20 @@ function sieve_era_part(primes, from, N) {
   return new_primes;
 }
 
-function Sieve22Max() {
+function Sieve22Max(N) {
   // default all prime
-  init_space_enh(MAX);
+  init_space_enh(N);
 
   let prime = [];
 
-  for (let i = 2; i < MAX; ++i) {
+  for (let i = 2; i < N; ++i) {
     if (sieve_part[i]) {
       prime.push(i);
       spd_part[i] = i;
     }
 
     for (let p of prime) {
-      if (p > spd_part[i] || p * i >= MAX) break;
+      if (p > spd_part[i] || p * i >= N) break;
 
       sieve_part[p * i] = false;
       spd_part[p * i] = p;
@@ -72,16 +71,16 @@ function Sieve22Max() {
   return prime;
 }
 
+// Best record: 5e7 nth prime is 982,451,653, in 5,576.56 ms
 function nth_prime(n) {
-  // init_space_enh(MAX + 1);
-  // find prime up to MAX
-  let max = MAX;
-  let primes = Sieve22Max();
+  let SEG_SIZE = 1e6
+    , bound = 1e6
+    , primes = Sieve22Max(bound);
 
   while(primes.length < n) {
     // sieve for next segment
-    let new_primes = sieve_era_part(primes, max, max + MAX);
-    max += MAX;
+    let new_primes = sieve_era_part(primes, bound, bound + SEG_SIZE);
+    bound += SEG_SIZE;
 
     // extend primes
     primes.push.apply(primes, new_primes);

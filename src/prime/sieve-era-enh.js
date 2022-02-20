@@ -19,13 +19,13 @@ function sieve_era_part(primes, from, N) {
   // assume primes is the list of prime number from 2 to 'from' param
   for (let i = 0; i < N - from; ++i) sieve_part[i] = true;
 
-  let limit = ~~Math.sqrt(N);
-  if (primes.at(-1) <= limit - 2) {
+  let limit = Math.ceil(Math.sqrt(N));
+  if (primes.at(-1) < limit - 2) {
     console.error(`Not enough base primes to find up to ${N}`);
     return;
   }
 
-  for (let i = 0; primes[i] <= limit; ++i) {
+  for (let i = 0; primes[i] < limit; ++i) {
     let p = primes[i];
 
     // let cross = [];
